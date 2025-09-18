@@ -25,4 +25,6 @@ int Receive(int sockfd, void* buffer, int length);
 // Fermer un socket
 int Close(int sockfd);
 
+int Test();
+
 #endif
