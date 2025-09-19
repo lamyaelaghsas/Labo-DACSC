@@ -1,0 +1,4 @@
+# Configuration du Serveur Réservation
+PORT_RESERVATION=50000
+NB_THREADS_POOL=3
+PORT_ADMIN=50001
