@@ -59,5 +59,6 @@ private slots:
 
 private:
     Ui::MainWindowClientConsultationBooker *ui;
+    
 };
 #endif // MAINWINDOWCLIENTCONSULTATIONBOOKER_H
