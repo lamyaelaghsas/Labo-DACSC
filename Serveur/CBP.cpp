@@ -147,7 +147,8 @@ bool CBP_Login(const char* last_name, const char* first_name, int patient_id, bo
         int new_id = mysql_insert_id(connexion);
         sprintf(reponse, "LOGIN#ok#%d", new_id);
         
-        // TODO: Ajouter a la liste des clients connectes
+        CBP_SetLoggedIn(socket, new_id);
+
         return true;
     } else {
         // Verifier patient existant

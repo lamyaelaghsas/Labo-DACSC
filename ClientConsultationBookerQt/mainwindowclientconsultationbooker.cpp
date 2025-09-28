@@ -444,9 +444,53 @@ void MainWindowClientConsultationBooker::on_pushButtonRechercher_clicked()
 
 void MainWindowClientConsultationBooker::on_pushButtonReserver_clicked()
 {
-    int selectedTow = this->getSelectionIndexTableConsultations();
-
-    cout << "selectedRow = " << selectedTow << endl;
+    // Récupérer la ligne sélectionnée
+    int selectedRow = this->getSelectionIndexTableConsultations();
+    
+    if (selectedRow == -1) {
+        dialogError("Erreur", "Veuillez sélectionner une consultation à réserver");
+        return;
+    }
+    
+    // Récupérer l'ID de la consultation depuis le tableau
+    QTableWidgetItem* item = ui->tableWidgetConsultations->item(selectedRow, 0); // Colonne ID
+    if (!item) {
+        dialogError("Erreur", "Impossible de récupérer l'ID de la consultation");
+        return;
+    }
+    
+    int consultationId = item->text().toInt();
+    
+    // Demander la raison de la consultation style prof
+    string reason = dialogInputText("Raison de la consultation", "Entrez la raison de votre consultation:");
+    
+    if (reason.empty()) {
+        dialogMessage("Annulation", "Réservation annulée");
+        return;
+    }
+    
+    // Construction requête style prof
+    char requete[500], reponse[500];
+    sprintf(requete, "BOOK_CONSULTATION#%d#%s", consultationId, reason.c_str());
+    
+    // Echange style prof
+    Echange(requete, reponse);
+    
+    // Parsing réponse style prof
+    char *ptr = strtok(reponse, "#"); // entête = BOOK
+    ptr = strtok(NULL, "#"); // statut = ok ou ko
+    
+    if (strcmp(ptr, "ok") == 0) {
+        dialogMessage("Réservation", "Consultation réservée avec succès !");
+        
+        // Actualiser la recherche pour voir que la consultation a disparu
+        on_pushButtonRechercher_clicked();
+        
+    } else {
+        char* raison = strtok(NULL, "#"); // raison du ko
+        string msgErreur = raison ? string(raison) : "Erreur de réservation";
+        dialogError("Erreur de réservation", msgErreur);
+    }
 }
 
 
