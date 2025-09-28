@@ -1,0 +1,8 @@
+# Configuration du Serveur de Reservation Hospitalier
+# Format: PARAMETRE=valeur
+
+# Port d'ecoute du serveur
+PORT=50000
+
+# Nombre de threads dans le pool
+THREADS=3
