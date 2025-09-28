@@ -3,6 +3,7 @@
 #include <QInputDialog>
 #include <QMessageBox>
 #include <iostream>
+#include <unistd.h>
 using namespace std;
 
 MainWindowClientConsultationBooker::MainWindowClientConsultationBooker(QWidget *parent)
@@ -11,6 +12,8 @@ MainWindowClientConsultationBooker::MainWindowClientConsultationBooker(QWidget *
 {
     ui->setupUi(this);
     logoutOk();
+
+    sClient = -1; //pour la connexion au serveur
 
     // Configuration de la table des employes (Personnel Garage)
     ui->tableWidgetConsultations->setColumnCount(5);
@@ -253,12 +256,33 @@ void MainWindowClientConsultationBooker::on_pushButtonLogin_clicked()
     int patientId = this->getPatientId();
     bool newPatient = this->isNewPatientSelected();
 
-    cout << "lastName = " << lastName << endl;
-    cout << "FirstName = " << firstName << endl;
-    cout << "patientId = " << patientId << endl;
-    cout << "newPatient = " << newPatient << endl;
-
-    loginOk();
+    // ← REMPLACER LES cout PAR :
+    
+    // Connexion au serveur
+    sClient = ClientSocket((char*)"127.0.0.1", 50000);
+    if (sClient == -1) {
+        dialogError("Erreur", "Impossible de se connecter au serveur");
+        return;
+    }
+    
+    // Requête LOGIN
+    char requete[500], reponse[500];
+    sprintf(requete, "LOGIN#%s#%s#%d#%s", 
+            lastName.c_str(), firstName.c_str(), patientId, 
+            newPatient ? "true" : "false");
+    
+    Send(sClient, requete, strlen(requete));
+    int nbLus = Receive(sClient, reponse);
+    reponse[nbLus] = '\0';
+    
+    // Parser la réponse
+    if (strncmp(reponse, "LOGIN#ok", 8) == 0) {
+        loginOk();
+    } else {
+        dialogError("Erreur de login", "Échec de l'authentification");
+        ::close(sClient); //Qt a sa propre fonction close() et on veut utiliser la fonction système close() donc ajout de prefixe :: pr utiliser la fct systeme
+        sClient = -1;
+    }
 }
 
 void MainWindowClientConsultationBooker::on_pushButtonLogout_clicked()

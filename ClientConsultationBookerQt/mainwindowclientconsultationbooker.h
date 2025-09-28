@@ -3,6 +3,9 @@
 
 #include <QMainWindow>
 #include <string>
+
+#include "../lib/TCP.h" 
+
 using namespace std;
 
 QT_BEGIN_NAMESPACE
@@ -59,5 +62,6 @@ private slots:
 
 private:
     Ui::MainWindowClientConsultationBooker *ui;
+    int sClient; 
 };
 #endif // MAINWINDOWCLIENTCONSULTATIONBOOKER_H
