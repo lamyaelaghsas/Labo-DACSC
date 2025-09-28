@@ -262,14 +262,18 @@ void CBP_SearchConsultations(const char* specialty, const char* doctor, const ch
         "AND c.date >= '%s' AND c.date <= '%s'", 
         start_date, end_date);
     
-    // Ajouter filtres optionnels
-    if (strlen(specialty) > 0) {
+    // 🔍 DEBUG: Afficher les paramètres reçus
+    printf("🟡 SEARCH PARAMS: specialty='%s', doctor='%s', start='%s', end='%s'\n", 
+           specialty, doctor, start_date, end_date);
+    
+    // Ajouter filtres optionnels - style prof avec wildcard "*"
+    if (strlen(specialty) > 0 && strcmp(specialty, "*") != 0) {
         strcat(query, " AND s.name LIKE '%");
         strcat(query, specialty);
         strcat(query, "%'");
     }
-    
-    if (strlen(doctor) > 0) {
+
+    if (strlen(doctor) > 0 && strcmp(doctor, "*") != 0) {
         strcat(query, " AND (d.last_name LIKE '%");
         strcat(query, doctor);
         strcat(query, "%' OR d.first_name LIKE '%");
@@ -279,7 +283,11 @@ void CBP_SearchConsultations(const char* specialty, const char* doctor, const ch
     
     strcat(query, " ORDER BY c.date, c.hour");
     
+    // 🔍 DEBUG: Afficher la requête SQL complète
+    printf("🟡 SQL QUERY: %s\n", query);
+    
     if (mysql_query(connexion, query)) {
+        printf("MYSQL ERROR: %s\n", mysql_error(connexion));
         strcpy(reponse, "CONSULTATIONS#ko#Erreur requete");
         return;
     }
@@ -289,7 +297,12 @@ void CBP_SearchConsultations(const char* specialty, const char* doctor, const ch
     
     strcpy(reponse, "CONSULTATIONS#ok");
     
+    int count = 0;
     while ((row = mysql_fetch_row(result))) {
+        count++;
+        printf("🟢 ROW %d: id=%s, doctor=%s %s, specialty=%s, date=%s, hour=%s\n", 
+               count, row[0], row[1], row[2], row[3], row[4], row[5]);
+        
         strcat(reponse, "#");
         strcat(reponse, row[0]); // consultation id
         strcat(reponse, "#");
@@ -304,6 +317,7 @@ void CBP_SearchConsultations(const char* specialty, const char* doctor, const ch
         strcat(reponse, row[5]); // hour
     }
     
+    printf("🟡 TOTAL ROWS: %d\n", count);
     mysql_free_result(result);
 }
 

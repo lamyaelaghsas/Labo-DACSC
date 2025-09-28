@@ -63,5 +63,6 @@ private slots:
 private:
     Ui::MainWindowClientConsultationBooker *ui;
     int sClient; 
+    void Echange(char* requete, char* reponse);
 };
 #endif // MAINWINDOWCLIENTCONSULTATIONBOOKER_H
