@@ -312,7 +312,7 @@ void CBP_SearchConsultations(const char* specialty, const char* doctor, const ch
         "AND c.date >= '%s' AND c.date <= '%s'", 
         start_date, end_date);
     
-    // 🔍 DEBUG: Afficher les paramètres reçus
+    // DEBUG: Afficher les paramètres reçus
     printf("🟡 SEARCH PARAMS: specialty='%s', doctor='%s', start='%s', end='%s'\n", 
            specialty, doctor, start_date, end_date);
     
