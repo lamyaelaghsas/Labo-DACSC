@@ -316,7 +316,7 @@ void CBP_SearchConsultations(const char* specialty, const char* doctor, const ch
     printf("🟡 SEARCH PARAMS: specialty='%s', doctor='%s', start='%s', end='%s'\n", 
            specialty, doctor, start_date, end_date);
     
-    // Ajouter filtres optionnels - style prof avec wildcard "*"
+    // Ajouter filtres optionnels -   avec wildcard "*"
     if (strlen(specialty) > 0 && strcmp(specialty, "*") != 0) {
         strcat(query, " AND s.name LIKE '%");
         strcat(query, specialty);
