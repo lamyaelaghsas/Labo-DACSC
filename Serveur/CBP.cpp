@@ -5,8 +5,13 @@
 #include <mysql.h>
 #include <pthread.h>
 
+// ========== VARIABLES GLOBALES ==========
+
 // Connexion MySQL globale
 static MYSQL* connexion = NULL;
+
+// NOUVEAU : Mutex pour proteger les acces MySQL
+static pthread_mutex_t mutex_mysql = PTHREAD_MUTEX_INITIALIZER;
 
 // Gestion des sessions clients (socket -> patient_id)
 #define MAX_CLIENTS 100
@@ -123,57 +128,101 @@ bool CBP(char* requete, char* reponse, int socket) {
 /**
  * Traite une requete LOGIN
  */
-bool CBP_Login(const char* last_name, const char* first_name, int patient_id, bool new_patient, char* reponse, int socket) {
+bool CBP_Login(const char* last_name, const char* first_name, int patient_id, 
+               bool new_patient, char* reponse, int socket) {
     if (!connexion) {
-        strcpy(reponse, "LOGIN#ko#Erreur base de donnees");
+        strcpy(reponse, "LOGIN#ko#Erreur base de donnees\r\n");
         return false;
     }
     
+    char safe_lastname[100], safe_firstname[100];
+    mysql_real_escape_string(connexion, safe_lastname, last_name, strlen(last_name));
+    mysql_real_escape_string(connexion, safe_firstname, first_name, strlen(first_name));
+    
     char query[500];
     MYSQL_RES* result;
-    MYSQL_ROW row;
+    
+    pthread_mutex_lock(&mutex_mysql);
     
     if (new_patient) {
-        // Creer un nouveau patient
-        sprintf(query, "INSERT INTO patients (last_name, first_name, birth_date) VALUES ('%s', '%s', '1990-01-01')", 
-                last_name, first_name);
+        // Verifier si le patient existe deja
+        sprintf(query, "SELECT id FROM patients WHERE last_name='%s' AND first_name='%s'", 
+                safe_lastname, safe_firstname);
         
         if (mysql_query(connexion, query)) {
-            strcpy(reponse, "LOGIN#ko#Erreur creation patient");
-            return false;
-        }
-        
-        // Recuperer l'ID du nouveau patient
-        int new_id = mysql_insert_id(connexion);
-        sprintf(reponse, "LOGIN#ok#%d", new_id);
-        
-        CBP_SetLoggedIn(socket, new_id);
-
-        return true;
-    } else {
-        // Verifier patient existant
-        sprintf(query, "SELECT id FROM patients WHERE last_name='%s' AND first_name='%s' AND id=%d", 
-                last_name, first_name, patient_id);
-        
-        if (mysql_query(connexion, query)) {
-            strcpy(reponse, "LOGIN#ko#Erreur requete");
+            pthread_mutex_unlock(&mutex_mysql);
+            strcpy(reponse, "LOGIN#ko#Erreur requete\r\n");
             return false;
         }
         
         result = mysql_store_result(connexion);
-        if (mysql_num_rows(result) == 0) {
+        int num_rows = mysql_num_rows(result);
+        
+        if (num_rows > 0) {
+            // Patient existe deja
+            MYSQL_ROW row = mysql_fetch_row(result);
+            int existing_id = atoi(row[0]);
             mysql_free_result(result);
-            strcpy(reponse, "LOGIN#ko#Patient inexistant");
+            pthread_mutex_unlock(&mutex_mysql);
+            sprintf(reponse, "LOGIN#ko#Patient existe deja (ID=%d)\r\n", existing_id);
             return false;
         }
         
         mysql_free_result(result);
-        strcpy(reponse, "LOGIN#ok");
         
-        // Ajouter a la liste des clients connectes
-        CBP_SetLoggedIn(socket, patient_id);
+        // Creer le nouveau patient
+        sprintf(query, "INSERT INTO patients (last_name, first_name, birth_date) "
+                       "VALUES ('%s', '%s', '1990-01-01')", 
+                safe_lastname, safe_firstname);
+        
+        if (mysql_query(connexion, query)) {
+            pthread_mutex_unlock(&mutex_mysql);
+            strcpy(reponse, "LOGIN#ko#Erreur creation patient\r\n");
+            return false;
+        }
+        
+        int new_id = mysql_insert_id(connexion);
+        pthread_mutex_unlock(&mutex_mysql);
+        
+        sprintf(reponse, "LOGIN#ok#%d\r\n", new_id);
+        CBP_SetLoggedIn(socket, new_id);
         return true;
+        
+    } else {
+    // Verifier patient existant
+    if (patient_id > 0) {
+        sprintf(query, "SELECT id FROM patients WHERE last_name='%s' AND first_name='%s' AND id=%d", 
+                safe_lastname, safe_firstname, patient_id);
+    } else {
+        sprintf(query, "SELECT id FROM patients WHERE last_name='%s' AND first_name='%s'", 
+                safe_lastname, safe_firstname);
     }
+    
+    if (mysql_query(connexion, query)) {
+        pthread_mutex_unlock(&mutex_mysql);
+        strcpy(reponse, "LOGIN#ko#Erreur requete\r\n");
+        return false;
+    }
+    
+    result = mysql_store_result(connexion);
+    int num_rows = mysql_num_rows(result);
+    
+    if (num_rows == 0) {
+        mysql_free_result(result);
+        pthread_mutex_unlock(&mutex_mysql);
+        strcpy(reponse, "LOGIN#ko#Patient inexistant\r\n");
+        return false;
+    }
+    
+    MYSQL_ROW row = mysql_fetch_row(result);
+    int found_id = atoi(row[0]);
+    mysql_free_result(result);
+    pthread_mutex_unlock(&mutex_mysql);
+    
+    sprintf(reponse, "LOGIN#ok#%d\r\n", found_id);
+    CBP_SetLoggedIn(socket, found_id);
+    return true;
+}
 }
 
 /**

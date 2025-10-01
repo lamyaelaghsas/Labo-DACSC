@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
     }
     printf("Connexion base de donnees OK\n");
     
-    // Armement des signaux (style prof)
+    // Armement des signaux 
     struct sigaction A;
     A.sa_flags = 0;
     sigemptyset(&A.sa_mask);

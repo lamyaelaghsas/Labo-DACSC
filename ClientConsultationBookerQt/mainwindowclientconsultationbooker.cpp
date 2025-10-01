@@ -253,14 +253,13 @@ int MainWindowClientConsultationBooker::dialogInputInt(const string& title,const
 void MainWindowClientConsultationBooker::Echange(char* requete, char* reponse) {
     int nbEcrits, nbLus;
     
-    // DEBUG: Afficher la requête envoyée
-    cout << "🟢 ENVOI: " << requete << endl;
-    
     // Envoi de la requete
     if ((nbEcrits = Send(sClient, requete, strlen(requete))) == -1) {
         strcpy(reponse, "ERROR#Erreur Send");
         return;
     }
+    
+    printf("[CLIENT] Envoi requete: %s\n", requete);
     
     // Reception de la reponse
     if ((nbLus = Receive(sClient, reponse)) < 0) {
@@ -275,8 +274,7 @@ void MainWindowClientConsultationBooker::Echange(char* requete, char* reponse) {
     
     reponse[nbLus] = '\0';
     
-    //  DEBUG: Afficher la réponse reçue
-    cout << "RECU: " << reponse << endl;
+    printf("[CLIENT] Reponse recue: %s\n", reponse);
 }
 
 
@@ -302,7 +300,7 @@ void MainWindowClientConsultationBooker::on_pushButtonLogin_clicked()
     
     Echange(requete, reponse);
     
-    // Parsing de la réponse style prof
+    // Parsing de la réponse  
     char *ptr = strtok(reponse, "#"); // entête = LOGIN
     ptr = strtok(NULL, "#"); // statut = ok ou ko
     
@@ -370,7 +368,7 @@ void MainWindowClientConsultationBooker::on_pushButtonRechercher_clicked()
     // Vider le tableau
     clearTableConsultations();
     
-    // Construction requête avec paramètres obligatoires style prof
+    // Construction requête avec paramètres obligatoires  
     char requete[1000], reponse[2000];
     
     // Transformation selon sélection
@@ -390,14 +388,14 @@ void MainWindowClientConsultationBooker::on_pushButtonRechercher_clicked()
         }
     }
     
-    // Construction requête style prof
+    // Construction requête  
     sprintf(requete, "SEARCH_CONSULTATIONS#%s#%s#%s#%s", 
             specialtyParam, doctorForSearch.c_str(), startDate.c_str(), endDate.c_str());
     
-    // Echange style prof
+    // Echange  
     Echange(requete, reponse);
     
-    // Parsing réponse style prof
+    // Parsing réponse  
     char *ptr = strtok(reponse, "#"); // entête = CONSULTATIONS
     ptr = strtok(NULL, "#"); // statut = ok ou ko
     
@@ -461,7 +459,7 @@ void MainWindowClientConsultationBooker::on_pushButtonReserver_clicked()
     
     int consultationId = item->text().toInt();
     
-    // Demander la raison de la consultation style prof
+    // Demander la raison de la consultation  
     string reason = dialogInputText("Raison de la consultation", "Entrez la raison de votre consultation:");
     
     if (reason.empty()) {
@@ -469,14 +467,14 @@ void MainWindowClientConsultationBooker::on_pushButtonReserver_clicked()
         return;
     }
     
-    // Construction requête style prof
+    // Construction requête  
     char requete[500], reponse[500];
     sprintf(requete, "BOOK_CONSULTATION#%d#%s", consultationId, reason.c_str());
     
-    // Echange style prof
+    // Echange  
     Echange(requete, reponse);
     
-    // Parsing réponse style prof
+    // Parsing réponse  
     char *ptr = strtok(reponse, "#"); // entête = BOOK
     ptr = strtok(NULL, "#"); // statut = ok ou ko
     
