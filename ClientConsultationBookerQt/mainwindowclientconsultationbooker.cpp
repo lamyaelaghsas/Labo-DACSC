@@ -491,6 +491,5 @@ void MainWindowClientConsultationBooker::on_pushButtonReserver_clicked()
     }
 }
 
-//test modif github
 
 
