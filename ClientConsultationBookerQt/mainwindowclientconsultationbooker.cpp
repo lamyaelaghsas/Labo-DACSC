@@ -292,11 +292,18 @@ void MainWindowClientConsultationBooker::on_pushButtonLogin_clicked()
         return;
     }
     
+    // Preparation du parametre newPatient
+    const char* newPatientStr;
+    if (newPatient)
+        newPatientStr = "true";
+    else
+        newPatientStr = "false";
+    
     // Requête LOGIN
     char requete[500], reponse[500];
     sprintf(requete, "LOGIN#%s#%s#%d#%s", 
             lastName.c_str(), firstName.c_str(), patientId, 
-            newPatient ? "true" : "false");
+            newPatientStr);
     
     Echange(requete, reponse);
     
@@ -346,7 +353,14 @@ void MainWindowClientConsultationBooker::on_pushButtonLogin_clicked()
         
     } else {
         char* raison = strtok(NULL, "#"); // raison du ko
-        string msgErreur = raison ? string(raison) : "Échec authentification";
+        
+        // Gestion du message d'erreur
+        string msgErreur;
+        if (raison)
+            msgErreur = string(raison);
+        else
+            msgErreur = "Échec authentification";
+        
         dialogError("Erreur de login", msgErreur);
         ::close(sClient);
         sClient = -1;
@@ -371,8 +385,12 @@ void MainWindowClientConsultationBooker::on_pushButtonRechercher_clicked()
     // Construction requête avec paramètres obligatoires  
     char requete[1000], reponse[2000];
     
-    // Transformation selon sélection
-    const char* specialtyParam = (specialty == "--- TOUTES ---") ? "*" : specialty.c_str();
+    // Transformation selon sélection de la specialite
+    const char* specialtyParam;
+    if (specialty == "--- TOUTES ---")
+        specialtyParam = "*";
+    else
+        specialtyParam = specialty.c_str();
     
     // Extraire seulement le nom de famille du médecin
     string doctorForSearch;
@@ -382,7 +400,7 @@ void MainWindowClientConsultationBooker::on_pushButtonRechercher_clicked()
         // Prendre seulement le premier mot (nom de famille)
         size_t pos = doctor.find(' ');
         if (pos != string::npos) {
-            doctorForSearch = doctor.substr(0, pos);  // "Maboul Paul" -> "Maboul"
+            doctorForSearch = doctor.substr(0, pos);
         } else {
             doctorForSearch = doctor;
         }
@@ -435,7 +453,14 @@ void MainWindowClientConsultationBooker::on_pushButtonRechercher_clicked()
         
     } else {
         char* raison = strtok(NULL, "#");
-        string msgErreur = raison ? string(raison) : "Erreur recherche";
+        
+        // Gestion du message d'erreur
+        string msgErreur;
+        if (raison)
+            msgErreur = string(raison);
+        else
+            msgErreur = "Erreur recherche";
+        
         dialogError("Erreur", msgErreur);
     }
 }
@@ -486,10 +511,16 @@ void MainWindowClientConsultationBooker::on_pushButtonReserver_clicked()
         
     } else {
         char* raison = strtok(NULL, "#"); // raison du ko
-        string msgErreur = raison ? string(raison) : "Erreur de réservation";
+        
+        // Gestion du message d'erreur
+        string msgErreur;
+        if (raison)
+            msgErreur = string(raison);
+        else
+            msgErreur = "Erreur de réservation";
+        
         dialogError("Erreur de réservation", msgErreur);
     }
 }
-
 
 
