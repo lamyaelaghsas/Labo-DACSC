@@ -10,7 +10,7 @@
 void HandlerSIGINT(int s);
 void TraitementConnexion(int sService);
 void* FctThreadClient(void* p);
-int LireConfiguration(const char* nomFichier);
+
 int sEcoute;
 
 // Gestion du pool de threads          
@@ -24,12 +24,27 @@ pthread_cond_t condSocketsAcceptees;
 
 int main(int argc,char* argv[])
 {
-    if (LireConfiguration("config.txt")==-1)
+    // ***** Lecture du fichier de configuration *****************
+    FILE* f;
+    if ((f = fopen("config.txt", "r")) == NULL)
     {
-        printf("Erreur...\n");
+        perror("Erreur d'ouverture du fichier");
         printf("Impossible de lire configuration.\n");
         exit(1);
     }
+
+    char ligne[100];
+    while (fgets(ligne, 100, f) != NULL)
+    {
+        char *cle = strtok(ligne, "=");
+        char *valeur = strtok(NULL, "=");
+        
+        if (strcmp(cle, "NB_THREADS_POOL") == 0)
+            NB_THREADS_POOL = atoi(valeur);
+        else if (strcmp(cle, "PORT_RESERVATION") == 0)
+            PORT_RESERVATION = atoi(valeur);
+    }
+    fclose(f);
 
     // Initialisation socketsAcceptees
     pthread_mutex_init(&mutexSocketsAcceptees,NULL);
@@ -78,9 +93,8 @@ int main(int argc,char* argv[])
         printf("Connexion acceptée : IP=%s socket=%d\n",ipClient,sService);
 
         // Insertion en liste d'attente et réveil d'un thread du pool
-        // (Production d'une tâche)
         pthread_mutex_lock(&mutexSocketsAcceptees);
-        socketsAcceptees[indiceEcriture] = sService;    // !!!
+        socketsAcceptees[indiceEcriture] = sService;
         indiceEcriture++;
         if (indiceEcriture == TAILLE_FILE_ATTENTE) indiceEcriture = 0;
         pthread_mutex_unlock(&mutexSocketsAcceptees);
@@ -174,28 +188,3 @@ void TraitementConnexion(int sService)
 }
 
 
-
-int LireConfiguration(const char* nomFichier)
-{
-    FILE* f;
-    if ((f = fopen(nomFichier, "r")) == NULL)
-    {
-        perror("Erreur d’ouverture du fichier");
-        return -1;
-    }
-
-    char ligne[100];
-    while (fgets(ligne, 100, f) != NULL)
-    {
-        char *cle = strtok(ligne, "=");
-        char *valeur = strtok(NULL, "=");
-        
-        if (strcmp(cle, "NB_THREADS_POOL") == 0)
-            NB_THREADS_POOL = atoi(valeur);
-        else if (strcmp(cle, "PORT_RESERVATION") == 0)
-            PORT_RESERVATION = atoi(valeur);
-    }
-
-    fclose(f);
-    return 0;
-}

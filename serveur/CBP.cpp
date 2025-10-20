@@ -72,6 +72,7 @@ bool CBP(char* requete, char* reponse,int socket)
     }
 
 
+
     // ***** LOGOUT *****************************************
     if (strcmp(ptr,"LOGOUT") == 0)
     {
@@ -161,7 +162,7 @@ bool CBP(char* requete, char* reponse,int socket)
 
     return true;
 
-
+}
 
 
 //***** Traitement des requetes *************************************
