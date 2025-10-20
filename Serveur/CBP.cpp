@@ -26,18 +26,19 @@ static void add_client(int socket, int patient_id);
 static void remove_client(int socket);
 
 /**
- * Fonction principale de gestion du protocole CBP
+ * La fonction CBP est le cœur du protocole. Elle reçoit la requête du client, prépare la réponse, et décide si on continue ou si on coupe la connexion
  */
 bool CBP(char* requete, char* reponse, int socket) {
     // Parsing de la requete 
-    char* token = strtok(requete, "#");
+    char* token = strtok(requete, "#"); //Exemple : "LOGIN#Durand#Jean" -> token pointe vers "LOGIN"
+    
     if (token == NULL) {
         strcpy(reponse, "ERROR#Requete malformee");
-        return true;
+        return true; //on garde la connexion ouverte pour quil réessaye
     }
     
-    // LOGIN
-    if (strcmp(token, "LOGIN") == 0) {
+    // ==================== LOGIN ====================
+    if (strcmp(token, "LOGIN") == 0) { //Si la commande reçue est “LOGIN”, on entre dans le bloc qui gère la connexion du patient
         char* last_name = strtok(NULL, "#");
         char* first_name = strtok(NULL, "#");
         char* patient_id_str = strtok(NULL, "#");
@@ -62,7 +63,7 @@ bool CBP(char* requete, char* reponse, int socket) {
         }
     }
     
-    // LOGOUT
+    // ==================== LOGOUT ====================
     else if (strcmp(token, "LOGOUT") == 0) {
         CBP_SetLoggedOut(socket);
         strcpy(reponse, "LOGOUT#ok");
@@ -75,17 +76,17 @@ bool CBP(char* requete, char* reponse, int socket) {
         return true;
     }
     
-    // GET_SPECIALTIES
+    // ==================== GET_SPECIALTIES ====================
     if (strcmp(token, "GET_SPECIALTIES") == 0) {
         CBP_GetSpecialties(reponse);
     }
     
-    // GET_DOCTORS
+    // ==================== GET_DOCTORS ====================
     else if (strcmp(token, "GET_DOCTORS") == 0) {
         CBP_GetDoctors(reponse);
     }
     
-    // SEARCH_CONSULTATIONS
+    // ==================== SEARCH_CONSULTATIONS ====================
     else if (strcmp(token, "SEARCH_CONSULTATIONS") == 0) {
         const char* specialty = strtok(NULL, "#");
         const char* doctor = strtok(NULL, "#");
@@ -101,7 +102,7 @@ bool CBP(char* requete, char* reponse, int socket) {
         CBP_SearchConsultations(specialty, doctor, start_date, end_date, reponse);
     }
     
-    // BOOK_CONSULTATION
+    // ==================== BOOK_CONSULTATION ====================
     else if (strcmp(token, "BOOK_CONSULTATION") == 0) {
         char* consultation_id_str = strtok(NULL, "#");
         char* reason = strtok(NULL, "#");
@@ -117,7 +118,7 @@ bool CBP(char* requete, char* reponse, int socket) {
         CBP_BookConsultation(consultation_id, reason, patient_id, reponse);
     }
     
-    // Commande inconnue
+    // ==================== Commande inconnue ====================
     else {
         strcpy(reponse, "ERROR#Commande inconnue");
     }

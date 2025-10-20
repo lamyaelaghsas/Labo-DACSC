@@ -250,34 +250,6 @@ int MainWindowClientConsultationBooker::dialogInputInt(const string& title,const
 ///// Fonctions gestion des boutons (TO DO) //////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void MainWindowClientConsultationBooker::Echange(char* requete, char* reponse) {
-    int nbEcrits, nbLus;
-    
-    // Envoi de la requete
-    if ((nbEcrits = Send(sClient, requete, strlen(requete))) == -1) {
-        strcpy(reponse, "ERROR#Erreur Send");
-        return;
-    }
-    
-    printf("[CLIENT] Envoi requete: %s\n", requete);
-    
-    // Reception de la reponse
-    if ((nbLus = Receive(sClient, reponse)) < 0) {
-        strcpy(reponse, "ERROR#Erreur Receive");
-        return;
-    }
-    
-    if (nbLus == 0) {
-        strcpy(reponse, "ERROR#Serveur arrete");
-        return;
-    }
-    
-    reponse[nbLus] = '\0';
-    
-    printf("[CLIENT] Reponse recue: %s\n", reponse);
-}
-
-
 void MainWindowClientConsultationBooker::on_pushButtonLogin_clicked()
 {
     string lastName = this->getLastName();
@@ -286,7 +258,7 @@ void MainWindowClientConsultationBooker::on_pushButtonLogin_clicked()
     bool newPatient = this->isNewPatientSelected();
 
     // Connexion au serveur
-    sClient = ClientSocket((char*)"127.0.0.1", 50000);
+    sClient = ClientSocket((char*)"127.0.0.1", 50000); //On tente de se connecter en TCP sur localhost (127.0.0.1), port 50000.
     if (sClient == -1) {
         dialogError("Erreur", "Impossible de se connecter au serveur");
         return;
@@ -299,20 +271,23 @@ void MainWindowClientConsultationBooker::on_pushButtonLogin_clicked()
     else
         newPatientStr = "false";
     
-    // Requête LOGIN
-    char requete[500], reponse[500];
-    sprintf(requete, "LOGIN#%s#%s#%d#%s", 
-            lastName.c_str(), firstName.c_str(), patientId, 
-            newPatientStr);
+    char requete[500]; // contiendra la trame à envoyer au serveur
+    char reponse[500]; // recevra la trame que le serveur renvoie
+
+    sprintf(requete, "LOGIN#%s#%s#%d#%s", lastName.c_str(), firstName.c_str(), patientId, newPatientStr);
     
-    Echange(requete, reponse);
+    if (Echanger(sClient, requete, reponse) == -1) //Echanger() envoie la requete au serveur et place sa reponse dans reponse
+    {
+        dialogError("Erreur", "Échec lors de l’échange avec le serveur");
+        return;
+    }
     
     // Parsing de la réponse  
-    char *ptr = strtok(reponse, "#"); // entête = LOGIN
-    ptr = strtok(NULL, "#"); // statut = ok ou ko
+    char *ptr = strtok(reponse, "#"); // premiere partie = LOGIN
+    ptr = strtok(NULL, "#"); // deuxieme partie = ok ou ko, "LOGIN\0ok\0123" NULL car reprend a partir de \0
     
     if (strcmp(ptr, "ok") == 0) {
-        loginOk();
+        loginOk(); //jactive l'interface pr debloquer les btn Rechercher/Reserver
         
         // CHARGER SPECIALITES
         strcpy(requete, "GET_SPECIALTIES");

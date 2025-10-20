@@ -1,7 +1,6 @@
 #ifndef TCP_H
 #define TCP_H
 
-// Taille maximum des données 
 #define TAILLE_MAX_DATA 10000
 
 /**
@@ -43,5 +42,8 @@ int Send(int sSocket, char* data, int taille);
  * @return Nombre d'octets reçus, ou -1 en cas d'erreur, 0 si connexion fermée
  */
 int Receive(int sSocket, char* data);
+
+// Fonction d’échange (envoi + réception)
+int Echanger(int sClient, const char* requete, char* reponse);
 
 #endif
