@@ -2,89 +2,104 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <signal.h>
-#include "../lib/TCP.h"
+#include "TCP.h"
 
-int sEcoute = -1; //socket qui écoute les nvl connexions
-int sService = -1; //socket utilisée pr "parler" avec un client spécifique
+typedef struct
+{
+    char nom[20];
+    int age;
+    float poids;
+} PERSONNE;
 
-void HandlerSIGINT(int s) {
-    printf("\nArret du serveur de test...\n");
-    if (sService != -1) close(sService);
-    if (sEcoute != -1) close(sEcoute);
-    exit(0);
-}
-
-int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        printf("Usage: %s <port>\n", argv[0]);
-        printf("Exemple: %s 50000\n", argv[0]);
+int main(int argc,char* argv[])
+{
+    if (argc != 2)
+    {
+        printf("Erreur...\n");
+        printf("USAGE : ServeurTest portServeur\n");
         exit(1);
     }
     
-    // Armement des signaux 
-    struct sigaction A;
-    A.sa_flags = 0;
-    sigemptyset(&A.sa_mask);
-    A.sa_handler = HandlerSIGINT;
-    if (sigaction(SIGINT, &A, NULL) == -1) {
-        perror("Erreur de sigaction");
+    int sServer;
+    if ((sServer = ServerSocket(atoi(argv[1]))) == -1)
+    {
+        perror("Erreur de ServerSocket");
         exit(1);
     }
     
-    int port = atoi(argv[1]);
-    printf("=== TEST SERVEUR TCP ===\n");
-    printf("Demarrage sur le port %d...\n", port);
+    printf("Attente d'une connexion...\n");
     
-    // 1. Creer socket serveur
-    sEcoute = ServerSocket(port);
-    if (sEcoute == -1) {
-        perror("Erreur ServerSocket");
+    char ipClient[50];
+    int sService;
+    if ((sService = Accept(sServer, ipClient)) == -1)
+    {
+        perror("Erreur de Accept");
+        close(sServer);
         exit(1);
     }
-    printf("ServerSocket OK (socket=%d)\n", sEcoute);
     
-    while (1) {
-        printf("\n--- Attente d'un client ---\n");
-        
-        // 2. Accepter une connexion
-        char ipClient[50];
-        sService = Accept(sEcoute, ipClient);
-        if (sService == -1) {
-            perror("Erreur Accept");
-            continue;
-        }
-        printf("Client connecte : IP=%s, socket=%d\n", ipClient, sService);
-        
-        // 3. Recevoir et renvoyer les messages (echo)
-        char buffer[TAILLE_MAX_DATA];
-        int nbLus;
-        
-        while ((nbLus = Receive(sService, buffer)) > 0) {
-            buffer[nbLus] = '\0'; // Ajouter \0 pour affichage
-            printf("Recu (%d bytes): %s\n", nbLus, buffer);
-            
-            // Creer la reponse echo
-            char reponse[TAILLE_MAX_DATA];
-            sprintf(reponse, "[ECHO] %s", buffer);
-            
-            int nbEnvoyes = Send(sService, reponse, strlen(reponse));
-            if (nbEnvoyes == -1) {
-                perror("Erreur Send");
-                break;
-            }
-            printf("Envoye (%d bytes): %s\n", nbEnvoyes, reponse);
-        }
-        
-        if (nbLus == 0) {
-            printf("Client deconnecte proprement\n");
-        } else {
-            printf("Erreur de reception\n");
-        }
-        
+    printf("Connexion acceptee !\n");
+    printf("Client connecte: %s\n", ipClient);
+    
+    // ***** Reception de texte pur ******************************
+    char buffer[100];
+    int nbLus;
+    if ((nbLus = Receive(sService, buffer)) < 0)
+    {
+        perror("Erreur de Receive");
         close(sService);
-        sService = -1;
+        close(sServer);
+        exit(1);
     }
     
-    return 0;
+    printf("NbLus = %d\n", nbLus);
+    buffer[nbLus] = 0;
+    printf("Lu = --%s--\n", buffer);
+    
+    // ***** Envoi de texte pur ***********************************
+    char texte[80];
+    strcpy(texte, "Je vais bien merci ;) !");
+    int nbEcrits;
+    if ((nbEcrits = Send(sService, texte, strlen(texte))) == -1)
+    {
+        perror("Erreur de Send");
+        close(sService);
+        close(sServer);
+        exit(1);
+    }
+    
+    printf("NbEcrits = %d\n", nbEcrits);
+    printf("Ecrit = --%s--\n", texte);
+    
+    // ***** Reception d'une structure ***************************
+    PERSONNE p;
+    if ((nbLus = Receive(sService, (char*)&p)) < 0)
+    {
+        perror("Erreur de Receive");
+        close(sService);
+        close(sServer);
+        exit(1);
+    }
+    
+    printf("NbLus = %d\n", nbLus);
+    printf("Lu = --%s--%d--%f--\n", p.nom, p.age, p.poids);
+    
+    // ***** Envoi d'une structure ********************************
+    strcpy(p.nom, "charlet");
+    p.age = 54;
+    p.poids = 71.98f;
+    if ((nbEcrits = Send(sService, (char*)&p, sizeof(PERSONNE))) < 0)
+    {
+        perror("Erreur de Send");
+        close(sService);
+        close(sServer);
+        exit(1);
+    }
+    
+    printf("NbEcrits = %d\n", nbEcrits);
+    printf("Ecrit = --%s--%d--%f--\n", p.nom, p.age, p.poids);
+    
+    close(sService);
+    close(sServer);
+    exit(0);
 }

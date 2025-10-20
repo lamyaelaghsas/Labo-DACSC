@@ -1,83 +1,48 @@
-# Fichier makefile - Projet DACSC 2025-2026
 .SILENT:
 
-# Variables de repertoires
-LIB=./lib
-SERVEUR=./Serveur
-CLIENT=./ClientConsultationBookerQt
-TESTS=./tests
+COMP = g++ -I lib/ -I serveur/
+LIB_TCP = lib/TCP.o
+SERVEUR_OBJS = serveur/CBP.o
+MYSQL_FLAGS = -I/usr/include/mysql -L/usr/lib64/mysql -lmysqlclient -lpthread
 
-# Variable de compilation avec options
-COMP=g++ -I $(LIB)
-COMP_QT=g++ -I/usr/include/qt5 -I/usr/include/qt5/QtWidgets -I/usr/include/qt5/QtGui -I/usr/include/qt5/QtCore -fPIC
-COMP_SERVEUR=g++ -I $(LIB) -I/usr/include/mysql -pthread
+all: ServeurReservation ClientReservation
 
-# Variables pour linkage
-MYSQL_LINK=-L/usr/lib64/mysql -lmysqlclient -lpthread -lz -lm -lrt -lssl -lcrypto -ldl
-QT_LINK=-lQt5Widgets -lQt5Gui -lQt5Core
+# ============= SERVEUR RESERVATION =============
+ServeurReservation: serveur/ServeurReservation.cpp $(LIB_TCP) $(SERVEUR_OBJS)
+	echo Création de ServeurReservation
+	$(COMP) serveur/ServeurReservation.cpp $(LIB_TCP) $(SERVEUR_OBJS) -o ServeurReservation $(MYSQL_FLAGS)
 
-# Fichiers objets
-OBJS=$(LIB)/TCP.o $(SERVEUR)/CBP.o
-OBJS_CLIENT=$(CLIENT)/main.o $(CLIENT)/mainwindowclientconsultationbooker.o $(CLIENT)/moc_mainwindowclientconsultationbooker.o $(LIB)/TCP.o
-OBJS_TEST=$(TESTS)/ClientTest.o $(LIB)/TCP.o
+serveur/CBP.o: serveur/CBP.cpp serveur/CBP.h
+	echo Création de CBP.o
+	$(COMP) -c serveur/CBP.cpp -o serveur/CBP.o $(MYSQL_FLAGS)
 
-# Executables
-PROGRAMS=$(SERVEUR)/ServeurReservation $(CLIENT)/ClientQt $(TESTS)/ClientTest
+# ============= LIBRAIRIE TCP =============
+lib/TCP.o: lib/TCP.cpp lib/TCP.h
+	echo Création de TCP.o
+	$(COMP) -c lib/TCP.cpp -o lib/TCP.o
 
-all: $(PROGRAMS)
+# ============= CLIENT RESERVATION Qt =============
+ClientReservation: ClientConsultationBookerQt/main.o ClientConsultationBookerQt/mainwindowclientconsultationbooker.o ClientConsultationBookerQt/moc_mainwindowclientconsultationbooker.o $(LIB_TCP)
+	echo Création de ClientReservation
+	g++ -o ClientReservation ClientConsultationBookerQt/main.o ClientConsultationBookerQt/mainwindowclientconsultationbooker.o ClientConsultationBookerQt/moc_mainwindowclientconsultationbooker.o $(LIB_TCP) /usr/lib64/libQt5Widgets.so /usr/lib64/libQt5Gui.so /usr/lib64/libQt5Core.so /usr/lib64/libGL.so -lpthread
 
-# ===== SERVEUR RESERVATION =====
+ClientConsultationBookerQt/main.o: ClientConsultationBookerQt/main.cpp
+	echo Création de main.o
+	g++ -c -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC -I./ClientConsultationBookerQt -I./lib -isystem /usr/include/qt5 -isystem /usr/include/qt5/QtWidgets -isystem /usr/include/qt5/QtGui -isystem /usr/include/qt5/QtCore -o ClientConsultationBookerQt/main.o ClientConsultationBookerQt/main.cpp
 
-$(SERVEUR)/ServeurReservation: $(SERVEUR)/ServeurReservation.cpp $(OBJS)
-	echo Creation de ServeurReservation
-	$(COMP_SERVEUR) $(SERVEUR)/ServeurReservation.cpp $(OBJS) $(MYSQL_LINK) -o $(SERVEUR)/ServeurReservation
+ClientConsultationBookerQt/mainwindowclientconsultationbooker.o: ClientConsultationBookerQt/mainwindowclientconsultationbooker.cpp ClientConsultationBookerQt/mainwindowclientconsultationbooker.h
+	echo Création de mainwindowclientconsultationbooker.o
+	g++ -c -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC -I./ClientConsultationBookerQt -I./lib -isystem /usr/include/qt5 -isystem /usr/include/qt5/QtWidgets -isystem /usr/include/qt5/QtGui -isystem /usr/include/qt5/QtCore -o ClientConsultationBookerQt/mainwindowclientconsultationbooker.o ClientConsultationBookerQt/mainwindowclientconsultationbooker.cpp
 
-$(SERVEUR)/CBP.o: $(SERVEUR)/CBP.cpp $(SERVEUR)/CBP.h
-	echo Creation de CBP.o
-	$(COMP_SERVEUR) $(SERVEUR)/CBP.cpp -c -o $(SERVEUR)/CBP.o
+ClientConsultationBookerQt/moc_mainwindowclientconsultationbooker.o: ClientConsultationBookerQt/moc_mainwindowclientconsultationbooker.cpp
+	echo Création de moc_mainwindowclientconsultationbooker.o
+	g++ -c -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC -I./ClientConsultationBookerQt -I./lib -isystem /usr/include/qt5 -isystem /usr/include/qt5/QtWidgets -isystem /usr/include/qt5/QtGui -isystem /usr/include/qt5/QtCore -o ClientConsultationBookerQt/moc_mainwindowclientconsultationbooker.o ClientConsultationBookerQt/moc_mainwindowclientconsultationbooker.cpp
 
-# ===== CLIENT QT =====
-
-$(CLIENT)/ClientQt: $(OBJS_CLIENT)
-	echo Creation de ClientQt
-	$(COMP_QT) $(OBJS_CLIENT) $(QT_LINK) -o $(CLIENT)/ClientQt
-
-$(CLIENT)/main.o: $(CLIENT)/main.cpp
-	echo Creation de main.o
-	$(COMP_QT) $(CLIENT)/main.cpp -c -o $(CLIENT)/main.o
-
-$(CLIENT)/mainwindowclientconsultationbooker.o: $(CLIENT)/mainwindowclientconsultationbooker.cpp $(CLIENT)/mainwindowclientconsultationbooker.h
-	echo Creation de mainwindowclientconsultationbooker.o
-	$(COMP_QT) $(CLIENT)/mainwindowclientconsultationbooker.cpp -c -o $(CLIENT)/mainwindowclientconsultationbooker.o
-
-$(CLIENT)/moc_mainwindowclientconsultationbooker.cpp: $(CLIENT)/mainwindowclientconsultationbooker.h
-	echo Generation de moc_mainwindowclientconsultationbooker.cpp
-	moc-qt5 $(CLIENT)/mainwindowclientconsultationbooker.h -o $(CLIENT)/moc_mainwindowclientconsultationbooker.cpp
-
-$(CLIENT)/moc_mainwindowclientconsultationbooker.o: $(CLIENT)/moc_mainwindowclientconsultationbooker.cpp
-	echo Creation de moc_mainwindowclientconsultationbooker.o
-	$(COMP_QT) $(CLIENT)/moc_mainwindowclientconsultationbooker.cpp -c -o $(CLIENT)/moc_mainwindowclientconsultationbooker.o
-
-# ===== TEST CLIENT =====
-
-$(TESTS)/ClientTest: $(OBJS_TEST)
-	echo Creation de ClientTest
-	$(COMP) $(OBJS_TEST) -o $(TESTS)/ClientTest
-
-$(TESTS)/ClientTest.o: $(TESTS)/ClientTest.cpp
-	echo Creation de ClientTest.o
-	$(COMP) $(TESTS)/ClientTest.cpp -c -o $(TESTS)/ClientTest.o
-
-# ===== LIBRAIRIE TCP =====
-
-$(LIB)/TCP.o: $(LIB)/TCP.cpp $(LIB)/TCP.h
-	echo Creation de TCP.o
-	$(COMP) $(LIB)/TCP.cpp -c -o $(LIB)/TCP.o
-
-# ===== CIBLES UTILITAIRES =====
-
+# ============= NETTOYAGE =============
 clean:
-	rm -f $(OBJS) $(OBJS_CLIENT) $(OBJS_TEST) $(CLIENT)/moc_*.cpp core
+	rm -f lib/*.o serveur/*.o ClientConsultationBookerQt/*.o core
+	echo Suppression des fichiers objets
 
 clobber: clean
-	rm -f $(PROGRAMS)
+	rm -f ServeurReservation ClientReservation
+	echo Suppression des exécutables
