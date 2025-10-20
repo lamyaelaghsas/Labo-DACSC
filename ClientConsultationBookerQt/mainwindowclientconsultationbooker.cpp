@@ -260,7 +260,7 @@ void MainWindowClientConsultationBooker::on_pushButtonLogin_clicked()
     cout << "newPatient = " << newPatient << endl;
 
     // Connexion sur le serveur
-    if ((sClient = ClientSocket("192.168.92.128", 50000)) == -1)
+    if ((sClient = ClientSocket("127.0.0.1", 50000)) == -1)
     {
         dialogError("Erreur","Erreur de ClientSocket");
         return;
@@ -571,7 +571,6 @@ bool MainWindowClientConsultationBooker::CBP_BookConsultation(int consultationId
         return false;
     }
 }
-
 
 
 

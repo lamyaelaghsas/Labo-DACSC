@@ -32,7 +32,7 @@ int ServerSocket(int port)
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family=AF_INET;
     hints.ai_socktype=SOCK_STREAM;
-    hints.ai_flags=AI_PASSIVE | AI_NUMERICSERV; // pour une connexion passive
+    hints.ai_flags=AI_PASSIVE | AI_NUMERICSERV;
     if (getaddrinfo(NULL, portStr, &hints, &results) != 0)
     {
         close(sEcoute);
@@ -92,7 +92,7 @@ int Accept(int sEcoute, char *ipClient)
 
 
 //-------------FONCTION 3 : ClientSocket-------------
-int ClientSocket(char* ipServeur, int portServeur)
+int ClientSocket(const char* ipServeur, int portServeur)
 {
     int sClient;
     char portStr[10];
@@ -130,13 +130,16 @@ int ClientSocket(char* ipServeur, int portServeur)
 
 
 //-------------FONCTION 4 : Send-------------
+// Envoie d'abord la taille puis les données
 int Send(int sSocket, char* data, int taille)
 {
     int nbEcrits;
     
+    // Envoi de la taille
     if ((nbEcrits = send(sSocket, &taille, sizeof(int), 0)) == -1)
         return -1;
     
+    // Envoi des données
     if ((nbEcrits = send(sSocket, data, taille, 0)) == -1)
         return -1;
     
@@ -146,17 +149,18 @@ int Send(int sSocket, char* data, int taille)
 
 
 //-------------FONCTION 5 : Receive-------------
+// Reçoit d'abord la taille puis les données
 int Receive(int sSocket, char* data)
 {
     int taille, nbLus;
     
+    // Reception de la taille
     if ((nbLus = recv(sSocket, &taille, sizeof(int), 0)) <= 0)
         return nbLus;
     
+    // Reception des données
     if ((nbLus = recv(sSocket, data, taille, 0)) <= 0)
         return nbLus;
     
     return nbLus;
 }
-
-
