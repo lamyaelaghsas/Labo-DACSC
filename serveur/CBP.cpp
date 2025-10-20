@@ -41,57 +41,33 @@ bool CBP(char* requete, char* reponse,int socket)
     {
         char nom[50], prenom[50], noPatient[50], nouveauPatient[50];
 
-        char *token = strtok(NULL, "#");
-        if (token == NULL) {
-            sprintf(reponse,"LOGIN#Non#Parametres manquants");
-            return false;
-        }
-        strcpy(nom, token);
-
-        token = strtok(NULL, "#");
-        if (token == NULL) {
-            sprintf(reponse,"LOGIN#Non#Parametres manquants");
-            return false;
-        }
-        strcpy(prenom, token);
-
-        token = strtok(NULL, "#");
-        if (token == NULL) {
-            sprintf(reponse,"LOGIN#Non#Parametres manquants");
-            return false;
-        }
-        strcpy(noPatient, token);
-
-        token = strtok(NULL, "#");
-        if (token == NULL) {
-            sprintf(reponse,"LOGIN#Non#Parametres manquants");
-            return false;
-        }
-        strcpy(nouveauPatient, token);
+        strcpy(nom, strtok(NULL, "#"));
+        strcpy(prenom, strtok(NULL, "#"));
+        strcpy(noPatient, strtok(NULL, "#"));
+        strcpy(nouveauPatient, strtok(NULL, "#"));
 
         printf("\t[THREAD %p] LOGIN de %s\n",pthread_self(),nom);
-        if (estPresent(socket) >= 0) // client déjà loggé
+        
+        if (estPresent(socket) >= 0)
         {
-            sprintf(reponse,"LOGIN#non#Client déjà loggé !");
+            sprintf(reponse,"LOGIN#Non#Client deja loge");
             return false;
+        }
+        
+        int patientId;
+        if(CBP_Login(nom,prenom,noPatient,nouveauPatient,&patientId))
+        {
+            if (strcmp(nouveauPatient, "true") == 0)
+                sprintf(reponse,"LOGIN#Oui#%d", patientId);
+            else
+                sprintf(reponse,"LOGIN#Oui");
+            
+            ajoute(socket, patientId);
         }
         else
         {
-            int patientId;
-            if(CBP_Login(nom,prenom,noPatient,nouveauPatient,&patientId))
-            {
-                if (strcmp(nouveauPatient, "true") == 0)
-                    sprintf(reponse,"LOGIN#Oui#%d", patientId);
-                else
-                    sprintf(reponse,"LOGIN#Oui");
-                
-                ajoute(socket, patientId);
-            }
-            else
-            {
-                sprintf(reponse,"LOGIN#Non");
-                return false;
-            }
+            sprintf(reponse,"LOGIN#Non");
+            return false;
         }
     }
 
@@ -139,36 +115,17 @@ bool CBP(char* requete, char* reponse,int socket)
     {
         char specialite[50], medecin[50], dateDebut[50], dateFin[50];
 
-        char *token = strtok(NULL, "#");
-        if (token == NULL) {
-            sprintf(reponse,"SEARCH_CONSULTATIONS#ko#Parametres manquants");
-            return false;
-        }
-        strcpy(specialite, token);
-        
-        token = strtok(NULL, "#");
-        if (token == NULL) {
-            sprintf(reponse,"SEARCH_CONSULTATIONS#ko#Parametres manquants");
-            return false;
-        }
-        strcpy(medecin, token);
-        
-        token = strtok(NULL, "#");
-        if (token == NULL) {
-            sprintf(reponse,"SEARCH_CONSULTATIONS#ko#Parametres manquants");
-            return false;
-        }
-        strcpy(dateDebut, token);
-        
-        token = strtok(NULL, "#");
-        if (token == NULL) {
-            sprintf(reponse,"SEARCH_CONSULTATIONS#ko#Parametres manquants");
-            return false;
-        }
-        strcpy(dateFin, token);
+        strcpy(specialite, strtok(NULL, "#"));
+        strcpy(medecin, strtok(NULL, "#"));
+        strcpy(dateDebut, strtok(NULL, "#"));
+        strcpy(dateFin, strtok(NULL, "#"));
 
         printf("\t[THREAD %p] SEARCH_CONSULTATIONS\n",pthread_self());
-        if (estPresent(socket) == -1) sprintf(reponse,"SEARCH_CONSULTATIONS#ko#Client non loge !");
+        
+        if (estPresent(socket) == -1)
+        {
+            sprintf(reponse,"SEARCH_CONSULTATIONS#ko#Client non loge");
+        }
         else
         {
             char* consultations = CBP_SearchConsultations(specialite,medecin,dateDebut,dateFin);
@@ -183,38 +140,26 @@ bool CBP(char* requete, char* reponse,int socket)
     {
         char consultationId[50], reason[50];
 
-        char *token = strtok(NULL, "#");
-        if (token == NULL) {
-            sprintf(reponse,"BOOK_CONSULTATION#ko#Parametres manquants");
-            return false;
-        }
-        strcpy(consultationId, token);
-        
-        token = strtok(NULL, "#");
-        if (token == NULL) {
-            sprintf(reponse,"BOOK_CONSULTATION#ko#Parametres manquants");
-            return false;
-        }
-        strcpy(reason, token);
+        strcpy(consultationId, strtok(NULL, "#"));
+        strcpy(reason, strtok(NULL, "#"));
 
         printf("\t[THREAD %p] BOOK_CONSULTATION %s\n",pthread_self(),consultationId);
+        
         int patientId = estPresent(socket);
-        if (patientId == -1) sprintf(reponse,"BOOK_CONSULTATION#ko#Client non loggé !");
+        if (patientId == -1)
+        {
+            sprintf(reponse,"BOOK_CONSULTATION#ko#Client non loge");
+        }
         else
         {
             if (CBP_BookConsultation(consultationId,reason,patientId))
-            {
                 sprintf(reponse,"BOOK_CONSULTATION#Oui");
-            } 
             else
-            {
                 sprintf(reponse,"BOOK_CONSULTATION#Non");
-            }
         }
     }
 
     return true;
-}
 
 
 
@@ -529,48 +474,54 @@ bool CBP_BookConsultation(const char* consultationId, const char* reason, int pa
 }
 
 
-
-
 //***** Fin prématurée **********************************************
+// Fonction appelée au CTRL+C pour fermer proprement le serveur
 void CBP_Close()
 {
+    // Fermeture de la connexion MySQL
     mysql_close(connexionBD);
     
+    // Fermeture de toutes les sockets clientes encore ouvertes
     pthread_mutex_lock(&mutexClients);
     for(int i=0; i<nbClients; i++)
         close(clients[i].socket);
     pthread_mutex_unlock(&mutexClients);
 }
 
-
 //***** Gestion de l'état du protocole ******************************
+// Ajoute un client à la liste des clients connectés
+// Paramètres : socket du client, ID du patient connecté
 void ajoute(int socket, int patientId)
 {
-    pthread_mutex_lock(&mutexClients);
+    pthread_mutex_lock(&mutexClients);  // Protection accès concurrent
     clients[nbClients].socket = socket;
     clients[nbClients].patientId = patientId;
     nbClients++;
     pthread_mutex_unlock(&mutexClients);
 }
 
-
-
+// Vérifie si une socket est déjà connectée
+// Retourne : l'ID du patient si connecté, -1 sinon
 int estPresent(int socket)
 {
     int indice = -1;
-    pthread_mutex_lock(&mutexClients);
+    pthread_mutex_lock(&mutexClients);  // Protection accès concurrent
     for(int i=0; i<nbClients; i++)
-        if (clients[i].socket == socket) { indice = clients[i].patientId; break; }
+        if (clients[i].socket == socket) { 
+            indice = clients[i].patientId; 
+            break; 
+        }
     pthread_mutex_unlock(&mutexClients);
     return indice;
 }
 
-
-
+// Retire un client de la liste des clients connectés (au LOGOUT)
+// Paramètre : socket du client à retirer
 void retire(int socket)
 {
-    pthread_mutex_lock(&mutexClients);
+    pthread_mutex_lock(&mutexClients);  // Protection accès concurrent
     
+    // Recherche de la position du client dans le tableau
     int pos = -1;
     for(int i=0; i<nbClients; i++)
     {
@@ -580,18 +531,19 @@ void retire(int socket)
             break; 
         }
     }
-
+    
+    // Si socket non trouvée, on sort
     if (pos == -1)
     {
         pthread_mutex_unlock(&mutexClients);
         return;
     }
     
+    // Décalage du tableau pour supprimer l'élément
     for (int i=pos; i<=nbClients-2; i++)
         clients[i] = clients[i+1];
     nbClients--;
+    
     pthread_mutex_unlock(&mutexClients);
 }
-
-
 
