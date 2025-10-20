@@ -574,6 +574,7 @@ bool MainWindowClientConsultationBooker::CBP_BookConsultation(int consultationId
 
 
 
+
 //***** Echange de données entre client et serveur ******************
 void MainWindowClientConsultationBooker::Echange(char* requete, char* reponse)
 {

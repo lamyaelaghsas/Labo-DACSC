@@ -29,7 +29,6 @@ MYSQL* connexionBD = NULL;
 
 
 //*******************************************************************
-#pragma region Parsing de la requete et creation de la reponse
 //***** Parsing de la requete et creation de la reponse *************
 bool CBP(char* requete, char* reponse,int socket)
 {
@@ -169,7 +168,7 @@ bool CBP(char* requete, char* reponse,int socket)
         strcpy(dateFin, token);
 
         printf("\t[THREAD %p] SEARCH_CONSULTATIONS\n",pthread_self());
-        if (estPresent(socket) == -1) sprintf(reponse,"SEARCH_CONSULTATIONS#ko#Client non loggé !");
+        if (estPresent(socket) == -1) sprintf(reponse,"SEARCH_CONSULTATIONS#ko#Client non loge !");
         else
         {
             char* consultations = CBP_SearchConsultations(specialite,medecin,dateDebut,dateFin);
@@ -217,11 +216,9 @@ bool CBP(char* requete, char* reponse,int socket)
     return true;
 }
 
-#pragma endregion
 
 
 
-#pragma region Traitement des requetes
 //***** Traitement des requetes *************************************
 bool CBP_Login(const char* nom, const char* prenom, const char* noPatient,const char* nouveauPatient, int* patientId)
 {
@@ -407,16 +404,54 @@ char* CBP_GetDoctors()
 
 char* CBP_SearchConsultations(const char* specialite, const char* medecin, const char* dateDebut, const char* dateFin)
 {
-    // Construction et exécution de la requête
+    // Construction de la requête avec gestion des filtres
     char requete[1000];
-    sprintf(requete,"SELECT c.id, s.name,CONCAT(d.last_name, ' ', d.first_name),c.date, c.hour "
-                    "FROM consultations c "
-                    "JOIN doctors d ON c.doctor_id = d.id "
-                    "JOIN specialties s ON d.specialty_id = s.id "
-                    "WHERE c.patient_id IS NULL "
-                    "AND c.date BETWEEN '%s' AND '%s' "
-                    "AND s.name = '%s' "
-                    "AND CONCAT(d.last_name, ' ', d.first_name) = '%s' ",dateDebut,dateFin,specialite,medecin);
+    
+    // Cas 1 : --- TOUTES --- et --- TOUS --- (pas de filtre)
+    if (strcmp(specialite, "--- TOUTES ---") == 0 && strcmp(medecin, "--- TOUS ---") == 0)
+    {
+        sprintf(requete,"SELECT c.id, s.name, CONCAT(d.last_name, ' ', d.first_name), c.date, c.hour "
+                        "FROM consultations c "
+                        "JOIN doctors d ON c.doctor_id = d.id "
+                        "JOIN specialties s ON d.specialty_id = s.id "
+                        "WHERE c.patient_id IS NULL "
+                        "AND c.date BETWEEN '%s' AND '%s' ", dateDebut, dateFin);
+    }
+    // Cas 2 : Spécialité choisie, --- TOUS --- médecins
+    else if (strcmp(medecin, "--- TOUS ---") == 0)
+    {
+        sprintf(requete,"SELECT c.id, s.name, CONCAT(d.last_name, ' ', d.first_name), c.date, c.hour "
+                        "FROM consultations c "
+                        "JOIN doctors d ON c.doctor_id = d.id "
+                        "JOIN specialties s ON d.specialty_id = s.id "
+                        "WHERE c.patient_id IS NULL "
+                        "AND c.date BETWEEN '%s' AND '%s' "
+                        "AND s.name = '%s' ", dateDebut, dateFin, specialite);
+    }
+    // Cas 3 : --- TOUTES --- spécialités, médecin choisi
+    else if (strcmp(specialite, "--- TOUTES ---") == 0)
+    {
+        sprintf(requete,"SELECT c.id, s.name, CONCAT(d.last_name, ' ', d.first_name), c.date, c.hour "
+                        "FROM consultations c "
+                        "JOIN doctors d ON c.doctor_id = d.id "
+                        "JOIN specialties s ON d.specialty_id = s.id "
+                        "WHERE c.patient_id IS NULL "
+                        "AND c.date BETWEEN '%s' AND '%s' "
+                        "AND CONCAT(d.last_name, ' ', d.first_name) = '%s' ", dateDebut, dateFin, medecin);
+    }
+    // Cas 4 : Spécialité ET médecin choisis
+    else
+    {
+        sprintf(requete,"SELECT c.id, s.name, CONCAT(d.last_name, ' ', d.first_name), c.date, c.hour "
+                        "FROM consultations c "
+                        "JOIN doctors d ON c.doctor_id = d.id "
+                        "JOIN specialties s ON d.specialty_id = s.id "
+                        "WHERE c.patient_id IS NULL "
+                        "AND c.date BETWEEN '%s' AND '%s' "
+                        "AND s.name = '%s' "
+                        "AND CONCAT(d.last_name, ' ', d.first_name) = '%s' ", 
+                        dateDebut, dateFin, specialite, medecin);
+    }
 
     if (mysql_query(connexionBD,requete) != 0)
     {
@@ -432,30 +467,25 @@ char* CBP_SearchConsultations(const char* specialite, const char* medecin, const
         return NULL;
     }
     
-
     char* reponse = (char*)malloc(2000);
     strcpy(reponse,"");
     
-
     MYSQL_ROW ligne;
     while ((ligne = mysql_fetch_row(ResultSet)) != NULL)
     {
         if (strlen(reponse) > 0) strcat(reponse,"#");
         
-
         strcat(reponse,ligne[0]); //id
         strcat(reponse,"#");
         strcat(reponse,ligne[1]); //specialite
         strcat(reponse,"#");
-        strcat(reponse,ligne[2]); //medcin
+        strcat(reponse,ligne[2]); //medecin
         strcat(reponse,"#");
         strcat(reponse,ligne[3]); //date
         strcat(reponse,"#");
         strcat(reponse,ligne[4]); //heure
     }
-
     
-
     return reponse;
 }
 
@@ -498,11 +528,9 @@ bool CBP_BookConsultation(const char* consultationId, const char* reason, int pa
     return true;
 }
 
-#pragma endregion
 
 
 
-#pragma region Fin prématurée
 //***** Fin prématurée **********************************************
 void CBP_Close()
 {
@@ -514,11 +542,7 @@ void CBP_Close()
     pthread_mutex_unlock(&mutexClients);
 }
 
-#pragma endregion
 
-
-
-#pragma region Gestion de l'état du protocole
 //***** Gestion de l'état du protocole ******************************
 void ajoute(int socket, int patientId)
 {
@@ -569,6 +593,5 @@ void retire(int socket)
     pthread_mutex_unlock(&mutexClients);
 }
 
-#pragma endregion
 
 

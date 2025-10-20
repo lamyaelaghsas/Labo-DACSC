@@ -24,7 +24,7 @@ pthread_cond_t condSocketsAcceptees;
 
 int main(int argc,char* argv[])
 {
-    if (LireConfiguration("configuration.txt")==-1)
+    if (LireConfiguration("config.txt")==-1)
     {
         printf("Erreur...\n");
         printf("Impossible de lire configuration.\n");
