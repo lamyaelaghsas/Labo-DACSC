@@ -13,6 +13,7 @@ typedef struct
     int socket;
     int patientId;
 } CLIENT;
+
 CLIENT clients[NB_MAX_CLIENTS];
 int nbClients = 0;
 
@@ -79,7 +80,7 @@ bool CBP(char* requete, char* reponse,int socket)
     if (strcmp(ptr,"LOGOUT") == 0)
     {
         printf("\t[THREAD %p] LOGOUT\n",pthread_self());
-        retire(socket);
+        retire(socket); // Supprime le client de la table
         sprintf(reponse,"LOGOUT#ok");
         return false;
     }
@@ -127,11 +128,11 @@ bool CBP(char* requete, char* reponse,int socket)
         
         if (estPresent(socket) == -1)
         {
-            sprintf(reponse,"SEARCH_CONSULTATIONS#ko#Client non loge");
+            sprintf(reponse,"SEARCH_CONSULTATIONS#ko#Client non loggé");
         }
         else
         {
-            char* consultations = CBP_SearchConsultations(specialite,medecin,dateDebut,dateFin);
+            char* consultations = CBP_SearchConsultations(specialite,medecin,dateDebut,dateFin); //va interroger la bdd
             sprintf(reponse,"SEARCH_CONSULTATIONS#%s",consultations);
             free(consultations);
         }
@@ -151,7 +152,7 @@ bool CBP(char* requete, char* reponse,int socket)
         int patientId = estPresent(socket);
         if (patientId == -1)
         {
-            sprintf(reponse,"BOOK_CONSULTATION#ko#Client non loge");
+            sprintf(reponse,"BOOK_CONSULTATION#ko#Client non loggé");
         }
         else
         {
@@ -400,13 +401,14 @@ char* CBP_SearchConsultations(const char* specialite, const char* medecin, const
                         dateDebut, dateFin, specialite, medecin);
     }
 
+    //ENVOI de la requete à la bdd avec mysql_query()
     if (mysql_query(connexionBD,requete) != 0)
     {
         fprintf(stderr, "Erreur de mysql_query: %s\n",mysql_error(connexionBD));
         return NULL;
     }
 
-    // Affichage du Result Set
+    // RÉCUPÉRATION DES RÉSULTATS
     MYSQL_RES *ResultSet;
     if ((ResultSet = mysql_store_result(connexionBD)) == NULL)
     {
@@ -414,6 +416,7 @@ char* CBP_SearchConsultations(const char* specialite, const char* medecin, const
         return NULL;
     }
     
+    //PRÉPARATION DE LA CHAÎNE RÉPONSE
     char* reponse = (char*)malloc(2000);
     strcpy(reponse,"");
     
@@ -490,7 +493,7 @@ void CBP_Close()
     pthread_mutex_unlock(&mutexClients);
 }
 
-// ======== Gestion de l'état du protocole ******************************
+// ======== Gestion de l'état du protocole =========================================
 // Ajoute un client à la liste des clients connectés
 // Paramètres : socket du client, ID du patient connecté
 void ajoute(int socket, int patientId)
@@ -514,11 +517,10 @@ int estPresent(int socket)
             break; 
         }
     pthread_mutex_unlock(&mutexClients);
-    return indice;
+    return indice; 
 }
 
-// Retire un client de la liste des clients connectés (au LOGOUT)
-// Paramètre : socket du client à retirer
+// Retire un client de la liste des clients connectés (au LOGOUT), Paramètre : socket du client à retirer
 void retire(int socket)
 {
     pthread_mutex_lock(&mutexClients);  // Protection accès concurrent

@@ -259,7 +259,7 @@ void MainWindowClientConsultationBooker::on_pushButtonLogin_clicked()
     cout << "patientId = " << patientId << endl;
     cout << "newPatient = " << newPatient << endl;
 
-    // Connexion TCP avec le serveur
+    // Le client va se connecter au serveur
     if ((sClient = ClientSocket("127.0.0.1", 50000)) == -1)
     {
         dialogError("Erreur","Erreur de ClientSocket");
@@ -393,7 +393,7 @@ void MainWindowClientConsultationBooker::Client_GetSpecialties()
     // ----- Envoi requete + réception réponse -----
     Echange(requete, reponse);
     
-    // ----- Parsing de la réponse -----
+    // ----- Découpe de la réponse -----
     char *ptr = strtok(reponse, "#");
     ptr = strtok(NULL, "#");
     if (ptr != NULL && strcmp(ptr, "ko") == 0)
@@ -433,7 +433,7 @@ void MainWindowClientConsultationBooker::Client_GetDoctors()
     // ----- Envoi requete + réception réponse -----
     Echange(requete, reponse);
     
-    // ----- Parsing de la réponse -----
+    // ----- Découpe de la réponse -----
     char *ptr = strtok(reponse, "#");
     ptr = strtok(NULL, "#");
     if (ptr != NULL && strcmp(ptr, "ko") == 0)
@@ -483,7 +483,7 @@ void MainWindowClientConsultationBooker::Client_SearchConsultations(const char* 
     // ----- Envoi requete + réception réponse -----
     Echange(requete, reponse);
     
-    // ----- Parsing de la réponse -----
+    // ----- Découpe de la réponse -----
     char *ptr = strtok(reponse, "#");
     ptr = strtok(NULL, "#");
     if (ptr != NULL && strcmp(ptr, "ko") == 0)
@@ -552,7 +552,7 @@ bool MainWindowClientConsultationBooker::Client_BookConsultation(int consultatio
     // ----- Envoi requete + réception réponse -----
     Echange(requete, reponse);
     
-    // ----- Parsing de la réponse -----
+    // ----- Découpe de la réponse -----
     char *ptr = strtok(reponse, "#");
     ptr = strtok(NULL, "#");
     if (ptr != NULL && strcmp(ptr, "Oui") == 0)

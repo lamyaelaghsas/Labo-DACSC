@@ -17,27 +17,29 @@ int sEcoute;
 int NB_THREADS_POOL;    
 int PORT_RESERVATION; 
 #define TAILLE_FILE_ATTENTE 20
-int socketsAcceptees[TAILLE_FILE_ATTENTE];
+int socketsAcceptees[TAILLE_FILE_ATTENTE]; //tab où je stocke les clients connectés
 int indiceEcriture=0, indiceLecture=0;
 pthread_mutex_t mutexSocketsAcceptees;
 pthread_cond_t condSocketsAcceptees;
 
+
+// ============== Fonction principale du serveur ==============
 int main(int argc,char* argv[])
 {
-    // Lecture du fichier de configuration 
+    // ------ Lecture du fichier de configuration ------
     FILE* f;
     if ((f = fopen("config.txt", "r")) == NULL)
     {
-        perror("Erreur d'ouverture du fichier");
-        printf("Impossible de lire configuration.\n");
+        perror("Erreur d'ouverture du fichier.\n");
+        printf("Impossible de lire config.txt.\n");
         exit(1);
     }
 
     char ligne[100];
     while (fgets(ligne, 100, f) != NULL)
     {
-        char *cle = strtok(ligne, "=");
-        char *valeur = strtok(NULL, "=");
+        char *cle = strtok(ligne, "="); //strtok retourne la partie avant =
+        char *valeur = strtok(NULL, "="); // retourne la partie apres =
         
         if (strcmp(cle, "NB_THREADS_POOL") == 0)
             NB_THREADS_POOL = atoi(valeur);
@@ -46,44 +48,47 @@ int main(int argc,char* argv[])
     }
     fclose(f);
 
-    // Initialisation socketsAcceptees
-    pthread_mutex_init(&mutexSocketsAcceptees,NULL);
-    pthread_cond_init(&condSocketsAcceptees,NULL);
-    for (int i=0 ; i<TAILLE_FILE_ATTENTE ; i++)
+    // ------ Initialisation socketsAcceptees ------
+    pthread_mutex_init(&mutexSocketsAcceptees,NULL); 
+    pthread_cond_init(&condSocketsAcceptees,NULL); //Initialise une variable de condition
+    
+    // ------ Initialisation du tableau socketsAcceptees à -1 (tte les cases sont vides) ------
+    for (int i=0 ; i<TAILLE_FILE_ATTENTE ; i++) 
         socketsAcceptees[i] = -1;
 
-    // Armement des signaux
+    // ------ Armement des signaux ------
     struct sigaction A;
     A.sa_flags = 0;
     sigemptyset(&A.sa_mask);
     A.sa_handler = HandlerSIGINT;
+
     if (sigaction(SIGINT,&A,NULL) == -1)
     {
         perror("Erreur de sigaction");
         exit(1);
     }
 
-    // Creation de la socket d'écoute
-    if ((sEcoute = ServerSocket(PORT_RESERVATION)) == -1)
+    // ------ Creation de la socket d'écoute principale du serveur, celle qui va écouter les connexions entrantes ------
+    if ((sEcoute = ServerSocket(PORT_RESERVATION)) == -1) //Elle écoute sur le port lu dans config.txt (ex : 50000)
     {
         perror("Erreur de ServeurSocket");
         exit(1);
     }
 
-    // Creation du pool de threads
+    // ------ Creation du pool de threads ------
     printf("Création du pool de threads.\n");
     pthread_t th;
     for (int i=0 ; i<NB_THREADS_POOL ; i++)
-        pthread_create(&th,NULL,FctThreadClient,NULL);
+        pthread_create(&th,NULL,FctThreadClient,NULL); //2 threads sont crées et lancés 
 
-    // Mise en boucle du serveur
-    int sService;
+    // -------------------- Mise en boucle du serveur : Se prépare à accepter des connexions infiniment --------------------
+    int sService; //sService sera la socket pour parler avec un client précis.
     char ipClient[50];
     printf("Demarrage du serveur.\n");
     while(1)
     {
         printf("Attente d'une connexion...\n");
-        if ((sService = Accept(sEcoute,ipClient)) == -1)
+        if ((sService = Accept(sEcoute,ipClient)) == -1) //le serveur est pret, mtn il attend qu'un client se connecte
         {
             perror("Erreur de Accept");
             close(sEcoute);
@@ -92,13 +97,13 @@ int main(int argc,char* argv[])
         }
         printf("Connexion acceptée : IP=%s socket=%d\n",ipClient,sService);
 
-        // Insertion en liste d'attente et réveil d'un thread du pool
+        // ------ Insertion en liste d'attente et réveil d'un thread du pool ------
         pthread_mutex_lock(&mutexSocketsAcceptees);
-        socketsAcceptees[indiceEcriture] = sService;
+        socketsAcceptees[indiceEcriture] = sService; //On place la nouvelle socket dans le tableau
         indiceEcriture++;
         if (indiceEcriture == TAILLE_FILE_ATTENTE) indiceEcriture = 0;
         pthread_mutex_unlock(&mutexSocketsAcceptees);
-        pthread_cond_signal(&condSocketsAcceptees);
+        pthread_cond_signal(&condSocketsAcceptees); //un thread est réveillé par pthread_cond_signal -> FctThreadClient
     }
 }
 
@@ -106,25 +111,25 @@ void* FctThreadClient(void* p)
 {
     int sService;
     
-    while(1)
+    while(1) //le thread tourne en boucle infinie
     {
         printf("\t[THREAD %p] Attente socket...\n",pthread_self());
 
         // Attente d'une tâche
         pthread_mutex_lock(&mutexSocketsAcceptees);
-        while (indiceEcriture == indiceLecture)
-            pthread_cond_wait(&condSocketsAcceptees,&mutexSocketsAcceptees);
+        while (indiceEcriture == indiceLecture) // Si indiceEcriture == indiceLecture, alors la file est vide → on attend.
+            pthread_cond_wait(&condSocketsAcceptees,&mutexSocketsAcceptees); //le thread s’endort jusqu’à ce qu’un autre le réveille (avec pthread_cond_signal quand un client se connecte)
 
-        sService = socketsAcceptees[indiceLecture];
-        socketsAcceptees[indiceLecture] = -1;
-        indiceLecture++;
-        if (indiceLecture == TAILLE_FILE_ATTENTE) indiceLecture = 0;
+        sService = socketsAcceptees[indiceLecture];//on lit la socket a traiter
+        socketsAcceptees[indiceLecture] = -1;//puis on la vide, on libere la case dans la file
+        indiceLecture++; //on avance l'indice de lecture dans la file
+        if (indiceLecture == TAILLE_FILE_ATTENTE) indiceLecture = 0;//si lindice arrive a la fin, on le remet au debut a 0
         pthread_mutex_unlock(&mutexSocketsAcceptees);
 
         // Traitement de la connexion (consommation de la tâche)
         printf("\t[THREAD %p] Je m'occupe de la socket %d\n",pthread_self(),sService);
 
-        TraitementConnexion(sService);
+        TraitementConnexion(sService); //le thread traite la requete
     }
 }
 
@@ -132,12 +137,15 @@ void* FctThreadClient(void* p)
 void HandlerSIGINT(int s)
 {
     printf("\nArret du serveur.\n");
-    close(sEcoute);
-    
-    pthread_mutex_lock(&mutexSocketsAcceptees);
+    close(sEcoute); //ferme la socket d'ecoute principal du serveur (pr ne plus accepter de client)
+
+    pthread_mutex_lock(&mutexSocketsAcceptees); //pendant ce bloc, aucun autre thread ne pourra lire ou écrire dans ce tableau
+
     for (int i=0 ; i<TAILLE_FILE_ATTENTE ; i++)
-        if (socketsAcceptees[i] != -1) close(socketsAcceptees[i]);
+        if (socketsAcceptees[i] != -1) close(socketsAcceptees[i]); //si la case contient un socket valide, on appelle close pour terminer la connexion avec ce client
+
     pthread_mutex_unlock(&mutexSocketsAcceptees);
+
     CBP_Close();    
     exit(0);
 }
