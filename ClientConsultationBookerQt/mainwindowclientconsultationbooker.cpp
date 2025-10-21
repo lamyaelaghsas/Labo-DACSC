@@ -259,7 +259,7 @@ void MainWindowClientConsultationBooker::on_pushButtonLogin_clicked()
     cout << "patientId = " << patientId << endl;
     cout << "newPatient = " << newPatient << endl;
 
-    // Connexion sur le serveur
+    // Connexion TCP avec le serveur
     if ((sClient = ClientSocket("127.0.0.1", 50000)) == -1)
     {
         dialogError("Erreur","Erreur de ClientSocket");
@@ -267,22 +267,22 @@ void MainWindowClientConsultationBooker::on_pushButtonLogin_clicked()
     }
 
     // Phase de login
-    if (!CBP_Login(lastName.c_str(), firstName.c_str(), patientId, newPatient))
+    if (Client_Login(lastName.c_str(), firstName.c_str(), patientId, newPatient) == false)
     {
-        dialogError("Erreur", "Login incorect");
-        ::close(sClient);
+        dialogError("Erreur", "Login incorrect");
+        ::close(sClient); //on ferme la socket tcp
         return;
     }
 
-    CBP_GetSpecialties();
-    CBP_GetDoctors();
+    Client_GetSpecialties(); //une fois connecté, jdmd au serveur la liste des specialités medicales pr la liste deroulante ds l'interface
+    Client_GetDoctors(); //Ensuite, je demande au serveur la liste des médecins, pour mettre à jour l’autre liste déroulante
     
     loginOk();
 }
 
 void MainWindowClientConsultationBooker::on_pushButtonLogout_clicked()
 {
-    CBP_Logout();
+    Client_Logout();
 
     logoutOk();
 }
@@ -299,7 +299,7 @@ void MainWindowClientConsultationBooker::on_pushButtonRechercher_clicked()
     cout << "startDate = " << startDate << endl;
     cout << "endDate = " << endDate << endl;
 
-    CBP_SearchConsultations(specialty.c_str(), doctor.c_str(), startDate.c_str(), endDate.c_str());
+    Client_SearchConsultations(specialty.c_str(), doctor.c_str(), startDate.c_str(), endDate.c_str());
 }
 
 void MainWindowClientConsultationBooker::on_pushButtonReserver_clicked()
@@ -323,75 +323,77 @@ void MainWindowClientConsultationBooker::on_pushButtonReserver_clicked()
     // Récupérer l'ID réel à partir du tableau
     int consultationId = consultationIds[selectedRow];
 
-    if (CBP_BookConsultation(consultationId, reason.c_str())) {
+    if (Client_BookConsultation(consultationId, reason.c_str())) {
         dialogMessage("Succès", "Consultation réservée avec succès");
         on_pushButtonRechercher_clicked();
     }
 }
 
 
-//***** Gestion du protocole CBP ***********************************
-bool MainWindowClientConsultationBooker::CBP_Login(const char* nom, const char* prenom, int noPatient, bool nouveauPatient)
+// ============================= Constructions des trames  =============================
+
+bool MainWindowClientConsultationBooker::Client_Login(const char* nom, const char* prenom, int noPatient, bool nouveauPatient)
 {
     char requete[200], reponse[200];
-    bool onContinue = true;
+    bool onContinue = true; //si login a réussi ou non
     
-    // ***** Construction de la requete *********************
-    if (nouveauPatient)
+    // ----- Construction de la requete -----
+    if (nouveauPatient == true)
         sprintf(requete, "LOGIN#%s#%s#%d#true", nom, prenom, noPatient);
     else
         sprintf(requete, "LOGIN#%s#%s#%d#false", nom, prenom, noPatient);
     
-    // ***** Envoi requete + réception réponse **************
-    Echange(requete, reponse);
+    // ----- ENVOI de la requete + réception de réponse -----
+    Echange(requete, reponse); 
     
-    // ***** Parsing de la réponse **************************
-    char *ptr = strtok(reponse, "#"); // entête = LOGIN (normalement...)
-    ptr = strtok(NULL, "#"); // statut = oui ou non
+    // ----- RECEPTION de la réponse ------
+    char *ptr = strtok(reponse, "#"); // ptr retourne "LOGIN"
+    ptr = strtok(NULL, "#"); // ptr retourne "oui" ou "non" / sil retourne "oui" alors le serveur a accepté le login
     
-    if (strcmp(ptr, "Oui") == 0)
+    if (strcmp(ptr, "Oui") == 0) //on compare ce quon vient de lire avec ptr et "oui"
     {
-        if (nouveauPatient)
+        if (nouveauPatient == true)
         {
-            ptr = strtok(NULL, "#");
-            setPatientId(atoi(ptr));
+            ptr = strtok(NULL, "#"); //on lit le 3eme champ de la reponse qui l'id que le serveur a créer dans la bdd
+            setPatientId(atoi(ptr)); //on convertit ptr en entiers et setPatientId stocke cet ID coté client
         }
     }
     else
     {
-        ptr = strtok(NULL,"#"); // raison du non
+        ptr = strtok(NULL,"#"); // Lit le 3eme champ de la réponse LOGIN#Non#Patient inconnu -> ici "Patient inconnu"
         printf("Erreur de login: %s\n",ptr);
-        onContinue = false;
+
+        onContinue = false; //login échoué !
     }
     
-    return onContinue;
+    return onContinue; //login réussi!
 }
 
-void MainWindowClientConsultationBooker::CBP_Logout()
+void MainWindowClientConsultationBooker::Client_Logout()
 {
     char requete[200],reponse[200];
 
-    // ***** Construction de la requete *********************
+    // ----- Construction de la requete -----
     sprintf(requete,"LOGOUT");
 
-    // ***** Envoi requete + réception réponse **************
+    // ----- Envoi requete + réception réponse -----
     Echange(requete,reponse);
 
     ::close(sClient);
 
 }
 
-void MainWindowClientConsultationBooker::CBP_GetSpecialties()
+void MainWindowClientConsultationBooker::Client_GetSpecialties()
 {
     char requete[200], reponse[2000];
     
-    // ***** Construction de la requete *********************
+    // ----- Construction de la requete -----
     sprintf(requete, "GET_SPECIALTIES");
 
-    // ***** Envoi requete + réception réponse **************
+    // ----- Envoi requete + réception réponse -----
     Echange(requete, reponse);
     
-    // ***** Parsing de la réponse **************************
+    // ----- Parsing de la réponse -----
     char *ptr = strtok(reponse, "#");
     ptr = strtok(NULL, "#");
     if (ptr != NULL && strcmp(ptr, "ko") == 0)
@@ -421,17 +423,17 @@ void MainWindowClientConsultationBooker::CBP_GetSpecialties()
     }
 }
 
-void MainWindowClientConsultationBooker::CBP_GetDoctors()
+void MainWindowClientConsultationBooker::Client_GetDoctors()
 {
     char requete[200], reponse[2000];
     
-    // ***** Construction de la requete *********************
+    // -----Construction de la requete -----
     sprintf(requete, "GET_DOCTORS");
 
-    // ***** Envoi requete + réception réponse **************
+    // ----- Envoi requete + réception réponse -----
     Echange(requete, reponse);
     
-    // ***** Parsing de la réponse **************************
+    // ----- Parsing de la réponse -----
     char *ptr = strtok(reponse, "#");
     ptr = strtok(NULL, "#");
     if (ptr != NULL && strcmp(ptr, "ko") == 0)
@@ -471,17 +473,17 @@ void MainWindowClientConsultationBooker::CBP_GetDoctors()
     }
 }
 
-void MainWindowClientConsultationBooker::CBP_SearchConsultations(const char* specialty, const char* doctor, const char* startDate, const char* endDate)
+void MainWindowClientConsultationBooker::Client_SearchConsultations(const char* specialty, const char* doctor, const char* startDate, const char* endDate)
 {
     char requete[500], reponse[5000];
     
-    // ***** Construction de la requete *********************
+    // ----- Construction de la requete -----
     sprintf(requete, "SEARCH_CONSULTATIONS#%s#%s#%s#%s", specialty, doctor, startDate, endDate);
 
-    // ***** Envoi requete + réception réponse **************
+    // ----- Envoi requete + réception réponse -----
     Echange(requete, reponse);
     
-    // ***** Parsing de la réponse **************************
+    // ----- Parsing de la réponse -----
     char *ptr = strtok(reponse, "#");
     ptr = strtok(NULL, "#");
     if (ptr != NULL && strcmp(ptr, "ko") == 0)
@@ -540,17 +542,17 @@ void MainWindowClientConsultationBooker::CBP_SearchConsultations(const char* spe
     }
 }
 
-bool MainWindowClientConsultationBooker::CBP_BookConsultation(int consultationId, const char* reason)
+bool MainWindowClientConsultationBooker::Client_BookConsultation(int consultationId, const char* reason)
 {
     char requete[500], reponse[200];
 
-    // ***** Construction de la requete *********************
+    // ----- Construction de la requete -----
     sprintf(requete, "BOOK_CONSULTATION#%d#%s", consultationId, reason);
 
-    // ***** Envoi requete + réception réponse **************
+    // ----- Envoi requete + réception réponse -----
     Echange(requete, reponse);
     
-    // ***** Parsing de la réponse **************************
+    // ----- Parsing de la réponse -----
     char *ptr = strtok(reponse, "#");
     ptr = strtok(NULL, "#");
     if (ptr != NULL && strcmp(ptr, "Oui") == 0)
@@ -575,12 +577,12 @@ bool MainWindowClientConsultationBooker::CBP_BookConsultation(int consultationId
 
 
 
-//***** Echange de données entre client et serveur ******************
+//----- Echange de données entre client et serveur --------------------
 void MainWindowClientConsultationBooker::Echange(char* requete, char* reponse)
 {
     int nbEcrits, nbLus;
     
-    // ***** Envoi de la requete ****************************
+    // ----- Envoi de la requete -------------------------
     if ((nbEcrits = Send(sClient, requete, strlen(requete))) == -1)
     {
         perror("Erreur de Send");
@@ -588,7 +590,7 @@ void MainWindowClientConsultationBooker::Echange(char* requete, char* reponse)
         exit(1);
     }
     
-    // ***** Attente de la reponse **************************
+    // ----- Attente de la reponse -------------------------
     if ((nbLus = Receive(sClient, reponse)) < 0)
     {
         perror("Erreur de Receive");
@@ -598,7 +600,7 @@ void MainWindowClientConsultationBooker::Echange(char* requete, char* reponse)
     
     if (nbLus == 0)
     {
-        printf("Serveur arrete, pas de reponse reçue...\n");
+        printf("Serveur s'arrete, pas de reponse reçue...\n");
         ::close(sClient);
         exit(1);
     }

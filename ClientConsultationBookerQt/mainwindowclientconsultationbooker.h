@@ -64,12 +64,12 @@ private:
     int consultationIds[100];
     int nbConsultations;
     void Echange(char* requete, char* reponse);
-    bool CBP_Login(const char* nom, const char* prenom, int noPatient, bool nouveauPatient);
-    void CBP_Logout();
-    void CBP_GetSpecialties();
-    void CBP_GetDoctors();
-    void CBP_SearchConsultations(const char* specialty, const char* doctor, const char* startDate, const char* endDate);
-    bool CBP_BookConsultation(int consultationId, const char* reason);
+    bool Client_Login(const char* nom, const char* prenom, int noPatient, bool nouveauPatient);
+    void Client_Logout();
+    void Client_GetSpecialties();
+    void Client_GetDoctors();
+    void Client_SearchConsultations(const char* specialty, const char* doctor, const char* startDate, const char* endDate);
+    bool Client_BookConsultation(int consultationId, const char* reason);
     
 };
 #endif // MAINWINDOWCLIENTCONSULTATIONBOOKER_H

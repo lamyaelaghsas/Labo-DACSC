@@ -10,7 +10,6 @@
 #include "TCP.h"
 
 
-//-------------FONCTION 1 : ServerSocket-------------
 int ServerSocket(int port)
 {
     int sEcoute;
@@ -58,9 +57,6 @@ int ServerSocket(int port)
     return sEcoute;
 }
 
-
-
-//-------------FONCTION 2 : Accept-------------
 int Accept(int sEcoute, char *ipClient)
 {
     int sService;
@@ -90,8 +86,6 @@ int Accept(int sEcoute, char *ipClient)
 }
 
 
-
-//-------------FONCTION 3 : ClientSocket-------------
 int ClientSocket(const char* ipServeur, int portServeur)
 {
     int sClient;
@@ -128,39 +122,40 @@ int ClientSocket(const char* ipServeur, int portServeur)
 }
 
 
-
-//-------------FONCTION 4 : Send-------------
-// Envoie d'abord la taille puis les données
 int Send(int sSocket, char* data, int taille)
 {
-    int nbEcrits;
+    // 1. Envoi de l'entête (4 bytes pour la taille)
+    char entete[5];
+    sprintf(entete, "%04d", taille); //convertit la taille du msg en chaine de 4 caracteres
     
-    // Envoi de la taille
-    if ((nbEcrits = send(sSocket, &taille, sizeof(int), 0)) == -1)
+    if (send(sSocket, entete, 4, 0) != 4) 
         return -1;
     
-    // Envoi des données
-    if ((nbEcrits = send(sSocket, data, taille, 0)) == -1)
-        return -1;
-    
-    return nbEcrits;
+    // 2. Envoi des données
+    int nbEnvoyes = send(sSocket, data, taille, 0); //envoi des 4 caracteres = taille, Envoie le message réel (ex. "LOGIN#Marie#Dupont#123#true")
+    return nbEnvoyes;
 }
 
-
-
-//-------------FONCTION 5 : Receive-------------
-// Reçoit d'abord la taille puis les données
 int Receive(int sSocket, char* data)
 {
-    int taille, nbLus;
+    // 1. Lecture de l'entête (4 bytes)
+    char entete[5];
+    int nbLus = recv(sSocket, entete, 4, 0); //Lit les 4 premiers caractères qui indiquent la taille du message
     
-    // Reception de la taille
-    if ((nbLus = recv(sSocket, &taille, sizeof(int), 0)) <= 0)
+    if (nbLus <= 0)
         return nbLus;
     
-    // Reception des données
-    if ((nbLus = recv(sSocket, data, taille, 0)) <= 0)
-        return nbLus;
+    if (nbLus != 4)
+        return -1;
     
+    entete[4] = '\0';
+    int taille = atoi(entete); //je transforme en entiers pour savoir cmb d'octets je dois lire
+    
+    // Vérification taille raisonnable
+    if (taille < 0 || taille > TAILLE_MAX_DATA)
+        return -1;
+    
+    // 2. Lecture des données
+    nbLus = recv(sSocket, data, taille, 0); //Puis je lis exactement ce nb d'octets
     return nbLus;
 }

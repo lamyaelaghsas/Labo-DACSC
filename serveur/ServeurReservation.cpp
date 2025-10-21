@@ -24,7 +24,7 @@ pthread_cond_t condSocketsAcceptees;
 
 int main(int argc,char* argv[])
 {
-    // ***** Lecture du fichier de configuration *****************
+    // Lecture du fichier de configuration 
     FILE* f;
     if ((f = fopen("config.txt", "r")) == NULL)
     {
@@ -133,6 +133,7 @@ void HandlerSIGINT(int s)
 {
     printf("\nArret du serveur.\n");
     close(sEcoute);
+    
     pthread_mutex_lock(&mutexSocketsAcceptees);
     for (int i=0 ; i<TAILLE_FILE_ATTENTE ; i++)
         if (socketsAcceptees[i] != -1) close(socketsAcceptees[i]);
@@ -141,7 +142,7 @@ void HandlerSIGINT(int s)
     exit(0);
 }
 
-void TraitementConnexion(int sService)
+void TraitementConnexion(int sService) 
 {
     char requete[200], reponse[200];
     int nbLus, nbEcrits;
@@ -150,15 +151,15 @@ void TraitementConnexion(int sService)
     while (onContinue)
     {
         printf("\t[THREAD %p] Attente requete...\n",pthread_self());
-        // ***** Reception Requete ******************
-        if ((nbLus = Receive(sService,requete)) < 0)
+        // ------ Reception Requete ------
+        if ((nbLus = Receive(sService,requete)) < 0) //Je lis la trame que le client m’envoie, si ca echoue
         {
             perror("Erreur de Receive");
             close(sService);
             HandlerSIGINT(0);
         }
 
-        // ***** Fin de connexion ? *****************
+        // ------ Fin de connexion ------
         if (nbLus == 0)
         {
             printf("\t[THREAD %p] Fin de connexion du client.\n",pthread_self());
@@ -166,13 +167,13 @@ void TraitementConnexion(int sService)
             return;
         }
 
-        requete[nbLus] = 0;
+        requete[nbLus] = '\0';
         printf("\t[THREAD %p] Requete recue = %s\n",pthread_self(),requete);
 
-        // ***** Traitement de la requete ***********
+        // ------ Traitement de la requete ------
         onContinue = CBP(requete,reponse,sService); 
         
-        // ***** Envoi de la reponse ****************
+        // ------ Envoi de la reponse ------
         if ((nbEcrits = Send(sService,reponse,strlen(reponse))) < 0)
         {
             perror("Erreur de Send");
