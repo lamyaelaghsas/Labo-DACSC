@@ -31,7 +31,7 @@ int ServerSocket(int port)
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family=AF_INET;
     hints.ai_socktype=SOCK_STREAM;
-    hints.ai_flags=AI_PASSIVE | AI_NUMERICSERV;
+    hints.ai_flags=AI_PASSIVE | AI_NUMERICSERV; //AI_PASSIVE = pour ecouter car serveur
     if (getaddrinfo(NULL, portStr, &hints, &results) != 0)
     {
         close(sEcoute);
@@ -57,7 +57,7 @@ int ServerSocket(int port)
     return sEcoute;
 }
 
-int Accept(int sEcoute, char *ipClient)
+int Accept(int sEcoute, char *ipClient) //sEcoute créé par ServerSocket
 {
     int sService;
     
@@ -82,7 +82,7 @@ int Accept(int sEcoute, char *ipClient)
         strcpy(ipClient, host);
     }
     
-    return sService; //retourne le socket de service (sService) qu’on va utiliser pour discuter avec ce client
+    return sService; //retourne le socket dédiée au client
 }
 
 
