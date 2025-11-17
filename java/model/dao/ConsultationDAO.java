@@ -152,30 +152,12 @@ public class ConsultationDAO {
                 Integer doctorId = rs.getInt("doctor_id");
                 Integer patientId = rs.getInt("patient_id");
                 Date date = rs.getDate("date");
-
-                String hourStr = rs.getString("hour");
+                String timeStr = rs.getString("hour");
                 Time time = null;
-
-                // Gère différents formats d'heure
-                if (hourStr != null && !hourStr.isEmpty()) {
-                    try {
-                        // Ajoute les secondes si elles manquent
-                        if (!hourStr.contains(":00:")) {  // Pas de secondes
-                            String[] parts = hourStr.split(":");
-                            if (parts.length == 2) {
-                                // Formate HH:mm ou H:mm en HH:mm:ss
-                                int hours = Integer.parseInt(parts[0]);
-                                int minutes = Integer.parseInt(parts[1]);
-                                hourStr = String.format("%02d:%02d:00", hours, minutes);
-                            }
-                        }
-                        time = Time.valueOf(hourStr);
-                    } catch (Exception e) {
-                        System.err.println("Erreur conversion heure: " + hourStr + " - " + e.getMessage());
-                        time = Time.valueOf("00:00:00"); // Heure par défaut
-                    }
+                if (timeStr != null && !timeStr.isEmpty()) {
+                    if (timeStr.length() == 5) timeStr = timeStr + ":00";
+                    time = Time.valueOf(timeStr);
                 }
-
                 String reason = rs.getString("reason");
 
                 Consultation c = new Consultation(id, doctorId, patientId, date, time, reason);
