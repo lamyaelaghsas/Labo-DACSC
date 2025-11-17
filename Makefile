@@ -2,7 +2,7 @@
 
 COMP = g++ -I lib/ -I serveur/
 LIB_TCP = lib/TCP.o
-SERVEUR_OBJS = serveur/CBP.o
+SERVEUR_OBJS = serveur/CBP.o serveur/ACBP.o
 MYSQL_FLAGS = -I/usr/include/mysql -L/usr/lib64/mysql -lmysqlclient -lpthread
 
 all: ServeurReservation ClientReservation
@@ -15,6 +15,10 @@ ServeurReservation: serveur/ServeurReservation.cpp $(LIB_TCP) $(SERVEUR_OBJS)
 serveur/CBP.o: serveur/CBP.cpp serveur/CBP.h
 	echo Création de CBP.o
 	$(COMP) -c serveur/CBP.cpp -o serveur/CBP.o $(MYSQL_FLAGS)
+
+serveur/ACBP.o: serveur/ACBP.cpp serveur/ACBP.h
+	echo Création de ACBP.o
+	$(COMP) -c serveur/ACBP.cpp -o serveur/ACBP.o
 
 # ============= LIBRAIRIE TCP =============
 lib/TCP.o: lib/TCP.cpp lib/TCP.h

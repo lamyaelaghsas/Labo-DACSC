@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="JARs">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/JARs/bcprov-jdk15to18-169.jar!/" />
+      <root url="jar://$PROJECT_DIR$/JARs/mysql-connector-j-8.0.32.jar!/" />
+      <root url="jar://$PROJECT_DIR$/JARs/gson-2.8.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/JARs/mysql-connector-j-8.0.32-javadoc.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

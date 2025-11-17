@@ -5,21 +5,19 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <mysql/mysql.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include "CLIENT.h"
+
 
 
 // ========Etat du protocole : liste des clients loggés =================
-typedef struct
-{
-    int socket;
-    int patientId;
-} CLIENT;
-
 CLIENT clients[NB_MAX_CLIENTS];
 int nbClients = 0;
 
 
 int estPresent(int socket);
-void ajoute(int socket, int patientId);
+void ajoute(int socket, int patientId, const char* nom, const char* prenom, const char* noPatient, const char* ip);
 void retire(int socket);
 
 pthread_mutex_t mutexClients = PTHREAD_MUTEX_INITIALIZER;
@@ -63,9 +61,18 @@ bool CBP(char* requete, char* reponse,int socket)
                 sprintf(reponse,"LOGIN#Oui#%d", patientId);
             else
                 sprintf(reponse,"LOGIN#Oui");
+
+            struct sockaddr_in adrClient;
+            socklen_t adrClientLen = sizeof(struct sockaddr_in);
+            getpeername(socket, (struct sockaddr*)&adrClient, &adrClientLen);
+
+            char ipClient[50];
+            char host[NI_MAXHOST];
+            getnameinfo((struct sockaddr*)&adrClient, adrClientLen,host, NI_MAXHOST,NULL, 0,NI_NUMERICHOST);
+            strcpy(ipClient, host);
             
             //On associe le socket du client à son ID de patient dans une table de connexion, pour savoir qui est connecté
-            ajoute(socket, patientId);
+			ajoute(socket, patientId, nom, prenom, noPatient, ipClient);
         }
         else
         {
@@ -496,11 +503,15 @@ void CBP_Close()
 // ======== Gestion de l'état du protocole =========================================
 // Ajoute un client à la liste des clients connectés
 // Paramètres : socket du client, ID du patient connecté
-void ajoute(int socket, int patientId)
+void ajoute(int socket, int patientId, const char* nom, const char* prenom, const char* noPatient, const char* ip)
 {
-    pthread_mutex_lock(&mutexClients);  // Protection accès concurrent
+    pthread_mutex_lock(&mutexClients);
     clients[nbClients].socket = socket;
     clients[nbClients].patientId = patientId;
+    strcpy(clients[nbClients].nom, nom);
+    strcpy(clients[nbClients].prenom, prenom);
+    sprintf(clients[nbClients].noPatient, "%d", patientId);
+    strcpy(clients[nbClients].ip, ip);
     nbClients++;
     pthread_mutex_unlock(&mutexClients);
 }

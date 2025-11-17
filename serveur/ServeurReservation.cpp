@@ -5,11 +5,16 @@
 #include <signal.h>
 #include <pthread.h>
 #include "TCP.h"
-#include "CBP.h"    
+#include "CBP.h"
+#include "ACBP.h"
+
+
 
 void HandlerSIGINT(int s);
 void TraitementConnexion(int sService);
 void* FctThreadClient(void* p);
+void* FctThreadAdmin(void* p);
+void* TraiterRequeteAdmin(void* p);
 
 int sEcoute;
 
@@ -21,7 +26,8 @@ int socketsAcceptees[TAILLE_FILE_ATTENTE]; //tab où je stocke les clients conne
 int indiceEcriture=0, indiceLecture=0;
 pthread_mutex_t mutexSocketsAcceptees;
 pthread_cond_t condSocketsAcceptees;
-
+int PORT_ADMIN;
+int sEcouteAdmin;
 
 // ============== Fonction principale du serveur ==============
 int main(int argc,char* argv[])
@@ -197,3 +203,70 @@ void TraitementConnexion(int sService)
 }
 
 
+void* FctThreadAdmin(void* p)
+{
+	// Creation de la socket d'écoute Admin
+	if ((sEcouteAdmin = ServerSocket(PORT_ADMIN)) == -1)
+	{
+		perror("Erreur de ServerSocket Admin");
+		exit(1);
+	}
+
+	// Mise en boucle du serveur
+	int sService;
+	pthread_t th;
+	while(1)
+	{
+		printf("[THREAD ADMIN %p] Attente d'une connexion...\n",pthread_self());
+		if ((sService = Accept(sEcouteAdmin,NULL)) == -1)
+		{
+			perror("Erreur de Accept Admin");
+			continue;
+		}
+
+		// Creation d'un thread "à la demande" pour traiter cette requête
+		int *pSocket = (int*)malloc(sizeof(int));
+		*pSocket = sService;
+		pthread_create(&th,NULL,TraiterRequeteAdmin,(void*)pSocket);
+	}
+}
+
+void* TraiterRequeteAdmin(void* p)
+{
+	int sService = *((int*)p);
+	free(p);
+
+	char requete[200], reponse[200];
+	int nbLus, nbEcrits;
+
+	printf("\t[THREAD ADMIN %p] Je m'occupe de la socket %d\n",pthread_self(),sService);
+	printf("\t[THREAD ADMIN %p] Attente requete...\n",pthread_self());
+
+	// ***** Reception Requete ******************
+	if ((nbLus = Receive(sService,requete)) <= 0)
+	{
+		perror("Erreur de Receive");
+		close(sService);
+		pthread_exit(NULL);
+	}
+
+	requete[nbLus] = 0;
+	printf("\t[THREAD ADMIN %p] Requete recue = %s\n",pthread_self(),requete);
+
+	// ***** Traitement de la requete ***********
+	ACBP(requete,reponse);
+
+	// ***** Envoi de la reponse ****************
+	if ((nbEcrits = Send(sService,reponse,strlen(reponse))) < 0)
+	{
+		perror("Erreur de Send");
+		close(sService);
+		pthread_exit(NULL);
+	}
+
+	printf("\t[THREAD ADMIN %p] Reponse envoyee = %s\n",pthread_self(),reponse);
+
+		close(sService);
+
+	pthread_exit(NULL);
+}
