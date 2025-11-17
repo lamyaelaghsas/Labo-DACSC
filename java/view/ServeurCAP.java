@@ -23,7 +23,7 @@ public class ServeurCAP extends javax.swing.JFrame implements Logger
 
     private void loadConfiguration()
     {
-        ReadConfiguration.load("src/config.properties");
+        ReadConfiguration.load("java/config.properties");
         port = ReadConfiguration.getInt("PORT_CONSULTATION");
         poolSize = ReadConfiguration.getInt("POOL_SIZE");
         jTextFieldPort.setText(String.valueOf(port));

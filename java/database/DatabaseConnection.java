@@ -16,7 +16,7 @@ public class DatabaseConnection
             if (conn == null || conn.isClosed())
             {
                 ReadConfiguration config = new ReadConfiguration();
-                config.load("src/config.properties");
+                config.load("java/config.properties");
 
                 String sCon = ReadConfiguration.get("DB_URL");
                 String sUser = ReadConfiguration.get("DB_USER");
