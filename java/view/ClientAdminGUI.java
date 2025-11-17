@@ -48,7 +48,7 @@ public class ClientAdminGUI extends JFrame {
     }
 
     private void refreshClientList() throws IOException {
-        List<String[]> clients = acbpClient.getConnectedClients("192.168.157.128 ", 50001);
+        List<String[]> clients = acbpClient.getConnectedClients("192.168.157.128", 50001);
         displayClients(clients);
     }
 

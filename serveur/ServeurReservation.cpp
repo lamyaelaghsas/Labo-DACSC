@@ -51,6 +51,8 @@ int main(int argc,char* argv[])
             NB_THREADS_POOL = atoi(valeur);
         else if (strcmp(cle, "PORT_RESERVATION") == 0)
             PORT_RESERVATION = atoi(valeur);
+        else if (strcmp(cle, "PORT_ADMIN") == 0)
+            PORT_ADMIN = atoi(valeur);
     }
     fclose(f);
 
@@ -84,8 +86,14 @@ int main(int argc,char* argv[])
     // ------ Creation du pool de threads ------
     printf("Création du pool de threads.\n");
     pthread_t th;
+
+    pthread_t thAdmin;
+
     for (int i=0 ; i<NB_THREADS_POOL ; i++)
-        pthread_create(&th,NULL,FctThreadClient,NULL); //2 threads sont crées et lancés 
+        pthread_create(&th,NULL,FctThreadClient,NULL); //2 threads sont crées et lancés
+
+    // ------ Creation du pool de threadsadmin------
+    pthread_create(&thAdmin,NULL,FctThreadAdmin,NULL);
 
     // -------------------- Mise en boucle du serveur : Se prépare à accepter des connexions infiniment --------------------
     int sService; //sService sera la socket pour parler avec un client précis.
