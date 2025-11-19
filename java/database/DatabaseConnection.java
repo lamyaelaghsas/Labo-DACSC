@@ -6,8 +6,8 @@ import configuration.ReadConfiguration;
 
 public class DatabaseConnection
 {
-    private static Connection conn = null;
-    private static DatabaseConnection instance = null;
+    private static Connection conn = null; //connexion sql utilisée partt
+    private static DatabaseConnection instance = null; //objet unique de la classe (singleton)
 
     private DatabaseConnection()
     {
@@ -21,8 +21,8 @@ public class DatabaseConnection
                 String sCon = ReadConfiguration.get("DB_URL");
                 String sUser = ReadConfiguration.get("DB_USER");
                 String sPwd = ReadConfiguration.get("DB_PASSWORD");
-                Class.forName("com.mysql.cj.jdbc.Driver");
-                conn = DriverManager.getConnection(sCon, sUser, sPwd);
+                Class.forName("com.mysql.cj.jdbc.Driver"); //charge le "pilote" MySQL pour permettre à Java de parler avec MySQL
+                conn = DriverManager.getConnection(sCon, sUser, sPwd); //On crée la connexion réelle à la base, en utilisant l’URL, l’utilisateur et le mot de passe
             }
         }
         catch (ClassNotFoundException | SQLException ex)
@@ -38,7 +38,9 @@ public class DatabaseConnection
         return instance;
     }
 
-    public Connection getConn() { return conn; }
+    public Connection getConn() { //Permet d'accéder à la connexion JDBC (celle qui est stockée dans conn)
+        return conn;
+    }
 
     public static void close()
     {

@@ -36,16 +36,26 @@ public class ClientConsultationGUI extends JFrame implements ActionListener
     private String username;
     private int doctorId;
 
-    //-------------FONTCTIONS------------------
+    // Couleurs pastel
+    private Color rosePastel = new Color(255, 209, 220);
+    private Color jaunePastel = new Color(255, 253, 208);
+    private Color vertPastel = new Color(220, 240, 220);
+    private Color bleuPastel = new Color(224, 240, 255);
+    private Color backgroundColor = new Color(252, 252, 255);
+    private Color borderColor = new Color(230, 230, 235);
+    private Color textColor = new Color(80, 80, 90);
+
+    //-------------FONCTIONS------------------
     public ClientConsultationGUI(String user, int docId)
     {
         username = user;
         doctorId = docId;
 
         setTitle("Gestion des Consultations - " + username);
-        setSize(1000, 600);
+        setSize(1200, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        getContentPane().setBackground(backgroundColor);
 
         initComponents();
         loadConsultations();
@@ -55,59 +65,92 @@ public class ClientConsultationGUI extends JFrame implements ActionListener
 
     private void initComponents()
     {
-        JPanel panelNord = new JPanel(new GridLayout(3, 1, 5, 5));
+        JPanel panelNord = new JPanel();
+        panelNord.setLayout(new BoxLayout(panelNord, BoxLayout.Y_AXIS));
+        panelNord.setBackground(backgroundColor);
+        panelNord.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+
+        // Titre
+        JLabel titre = new JLabel("Gestion des Consultations");
+        titre.setFont(new Font("Segoe UI", Font.PLAIN, 22));
+        titre.setForeground(textColor);
+        titre.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panelNord.add(titre);
+        panelNord.add(Box.createVerticalStrut(15));
 
         //------------RECHERCHE AVEC FILTRE---------------
-        JPanel panelFiltres = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panelFiltres.add(new JLabel("Nom Patient :"));
-        txtPatientName = new JTextField(15);
+        JPanel panelFiltres = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        panelFiltres.setBackground(jaunePastel);
+        panelFiltres.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(borderColor, 1),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+
+        JLabel lblNom = new JLabel("Nom Patient :");
+        lblNom.setForeground(textColor);
+        panelFiltres.add(lblNom);
+        txtPatientName = new JTextField(12);
+        txtPatientName.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         panelFiltres.add(txtPatientName);
 
-        panelFiltres.add(new JLabel("Prénom Patient :"));
-        txtPatientFirstName = new JTextField(15);
+        JLabel lblPrenom = new JLabel("Prénom Patient :");
+        lblPrenom.setForeground(textColor);
+        panelFiltres.add(lblPrenom);
+        txtPatientFirstName = new JTextField(12);
+        txtPatientFirstName.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         panelFiltres.add(txtPatientFirstName);
 
-        panelFiltres.add(new JLabel("Date début (yyyy-MM-dd) :"));
+        JLabel lblDateDebut = new JLabel("Date début (yyyy-MM-dd) :");
+        lblDateDebut.setForeground(textColor);
+        panelFiltres.add(lblDateDebut);
         txtDateDebut = new JTextField(10);
+        txtDateDebut.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         panelFiltres.add(txtDateDebut);
 
-        panelFiltres.add(new JLabel("Date fin :"));
+        JLabel lblDateFin = new JLabel("Date fin :");
+        lblDateFin.setForeground(textColor);
+        panelFiltres.add(lblDateFin);
         txtDateFin = new JTextField(10);
+        txtDateFin.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         panelFiltres.add(txtDateFin);
 
-        btnRechercher = new JButton("Rechercher");
+        btnRechercher = createStyledButton("Rechercher", rosePastel);
         btnRechercher.addActionListener(this);
         panelFiltres.add(btnRechercher);
 
+        panelFiltres.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panelNord.add(panelFiltres);
+        panelNord.add(Box.createVerticalStrut(10));
 
         //------------Boutons------------
-        JPanel panelActions = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        btnAjouterPatient = new JButton("Nouveau Patient");
+        JPanel panelActions = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        panelActions.setBackground(backgroundColor);
+
+        btnAjouterPatient = createStyledButton("Nouveau Patient", vertPastel);
         btnAjouterPatient.addActionListener(this);
         panelActions.add(btnAjouterPatient);
 
-        btnNouvelleConsult = new JButton("Nouvelle Consultation");
+        btnNouvelleConsult = createStyledButton("Nouvelle Consultation", vertPastel);
         btnNouvelleConsult.addActionListener(this);
         panelActions.add(btnNouvelleConsult);
 
-        btnReserverConsult = new JButton("Reserver Consultation");
+        btnReserverConsult = createStyledButton("Reserver Consultation", bleuPastel);
         btnReserverConsult.addActionListener(this);
         panelActions.add(btnReserverConsult);
 
-        btnSupprimerConsult = new JButton("Supprimer Consultation");
+        btnSupprimerConsult = createStyledButton("Supprimer Consultation", new Color(255, 220, 220));
         btnSupprimerConsult.addActionListener(this);
         panelActions.add(btnSupprimerConsult);
 
-        btnModifierConsult = new JButton("Modifier Consultation");
+        btnModifierConsult = createStyledButton("Modifier Consultation", bleuPastel);
         btnModifierConsult.addActionListener(this);
         panelActions.add(btnModifierConsult);
 
-        btnDeconnexion = new JButton("Déconnexion");
+        btnDeconnexion = createStyledButton("Déconnexion", new Color(240, 240, 245));
         btnDeconnexion.addActionListener(this);
         panelActions.add(btnDeconnexion);
 
-        panelNord.add(new JLabel("Consultations", JLabel.CENTER));
-        panelNord.add(panelFiltres);
+        panelActions.setAlignmentX(Component.LEFT_ALIGNMENT);
         panelNord.add(panelActions);
 
         String[] colonnes = {"ID", "NomPatient", "PrenomPatient", "Médecin", "Raison", "Date", "Heure"};
@@ -120,7 +163,29 @@ public class ClientConsultationGUI extends JFrame implements ActionListener
         };
 
         tableConsultations = new JTable(modelTable);
+        tableConsultations.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        tableConsultations.setRowHeight(35);
+        tableConsultations.setGridColor(borderColor);
+        tableConsultations.setSelectionBackground(vertPastel);
+        tableConsultations.setSelectionForeground(textColor);
+        tableConsultations.setShowVerticalLines(false);
+        tableConsultations.setShowHorizontalLines(true);
+        tableConsultations.setBackground(Color.WHITE);
+        tableConsultations.setForeground(textColor);
         tableConsultations.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        tableConsultations.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        tableConsultations.getTableHeader().setBackground(bleuPastel);
+        tableConsultations.getTableHeader().setForeground(textColor);
+        tableConsultations.getTableHeader().setPreferredSize(new Dimension(0, 40));
+        tableConsultations.getTableHeader().setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, borderColor));
+
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        for (int i = 0; i < tableConsultations.getColumnCount(); i++) {
+            tableConsultations.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        }
+
         tableConsultations.addMouseListener(new MouseAdapter()
         {
             public void mouseClicked(MouseEvent e)
@@ -133,9 +198,37 @@ public class ClientConsultationGUI extends JFrame implements ActionListener
         });
 
         JScrollPane scrollPane = new JScrollPane(tableConsultations);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
+        scrollPane.getViewport().setBackground(backgroundColor);
 
         add(panelNord, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
+    }
+
+    private JButton createStyledButton(String text, Color bgColor)
+    {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        button.setBackground(bgColor);
+        button.setForeground(textColor);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(borderColor, 1),
+                BorderFactory.createEmptyBorder(8, 15, 8, 15)
+        ));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        Color hoverColor = bgColor.darker();
+        button.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent evt) {
+                button.setBackground(hoverColor);
+            }
+            public void mouseExited(MouseEvent evt) {
+                button.setBackground(bgColor);
+            }
+        });
+
+        return button;
     }
 
     private void loadConsultations()
@@ -583,18 +676,5 @@ public class ClientConsultationGUI extends JFrame implements ActionListener
             dispose();
             System.exit(0);
         }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
+    }
 }

@@ -23,10 +23,10 @@ public class ThreadServeurPool extends ThreadServeur
     {
         logger.Trace("Démarrage du TH Serveur (Pool)...");
 
-        // Création du pool de threads
         try
         {
-            for (int i = 0; i < taillePool; i++)
+            // Création de 5 threads dans le pool
+            for (int i = 0; i < taillePool; i++) //5 threads
                 new ThreadClientPool(protocole, connexionsEnAttente, pool, logger).start();
         } catch (IOException ex)
         {
@@ -41,9 +41,9 @@ public class ThreadServeurPool extends ThreadServeur
             try
             {
                 ssocket.setSoTimeout(2000);
-                csocket = ssocket.accept();
+                csocket = ssocket.accept(); //Attend connexion
                 logger.Trace("Connexion acceptée, mise en file d'attente.");
-                connexionsEnAttente.addConnexion(csocket);
+                connexionsEnAttente.addConnexion(csocket); //Met en file attente
             } catch (SocketTimeoutException ex)
             {
                 // Pour vérifier si le thread a été interrompu

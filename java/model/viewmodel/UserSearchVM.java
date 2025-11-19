@@ -2,33 +2,30 @@ package model.viewmodel;
 
 public class UserSearchVM
 {
-    //---------------attributs---------------
+    //=================== ATTRIBUTS ===================
     private Integer id;
     private String login;
     private String role;
     private Integer doctorId;
 
-    //---------------constructeur---------------
+    //=================== CONSTRUCTEURS ===================
     public UserSearchVM() {}
 
-    //---------------accesseurs---------------
+    //=================== ACCESSEURS ===================
 
     //get
     public Integer getId()
     {
         return id;
     }
-
     public String getLogin()
     {
         return login;
     }
-
     public String getRole()
     {
         return role;
     }
-
     public Integer getDoctorId()
     {
         return doctorId;
@@ -39,17 +36,14 @@ public class UserSearchVM
     {
         this.id = id;
     }
-
     public void setLogin(String login)
     {
         this.login = login;
     }
-
     public void setRole(String role)
     {
         this.role = role;
     }
-
     public void setDoctorId(Integer doctorId)
     {
         this.doctorId = doctorId;

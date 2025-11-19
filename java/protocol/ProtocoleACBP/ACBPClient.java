@@ -17,25 +17,26 @@ public class ACBPClient {
         System.out.println("Connexion établie.");
 
         // Création des flux
-        DataOutputStream dos = new DataOutputStream(csocket.getOutputStream());
-        DataInputStream dis = new DataInputStream(csocket.getInputStream());
+        DataOutputStream dos = new DataOutputStream(csocket.getOutputStream()); //pour envoyer des données vers le serveur
+        DataInputStream dis = new DataInputStream(csocket.getInputStream()); //pour recevoir des données depuis le serveur
 
-        // Préparation des données à envoyer
+        // 1. Préparer la requête à envoyer
         String request = "LIST_CLIENTS";
-        int tailleRequete = request.length();
-        String header = String.valueOf(tailleRequete);
-        while (header.length() < 4) {
+        int tailleRequete = request.length(); // = 12
+
+        String header = String.valueOf(tailleRequete);// on convertit 12 en txt = "12"
+        while (header.length() < 4) { // -> "0012" car le serveur attend un header de 4 caracteres
             header = "0" + header;
         }
 
-        // Envoi des données
-        dos.write(header.getBytes());
-        dos.write(request.getBytes());
-        dos.flush();
+        // 2. Envoi de la requête
+        dos.write(header.getBytes()); //envoie le header
+        dos.write(request.getBytes()); //envoie la requete
+        dos.flush(); //force l'envoi
         System.out.println("Requête envoyée.");
 
-        // Lecture de la réponse
-        //header (4 bytes)
+        // 3. Lecture de la réponse du serveur
+        //   a. Lecture du header de la réponse (4 caractères)
         StringBuffer headerBuffer = new StringBuffer();
         for (int i = 0; i < 4; i++) {
             byte b = dis.readByte();
@@ -44,7 +45,7 @@ public class ACBPClient {
         String tailleReponseStr = headerBuffer.toString();
         int tailleReponse = Integer.parseInt(tailleReponseStr);
 
-        //message (tailleReponse bytes)
+        //   b. Lecture du message complet (140 caractères dans notre exemple)
         StringBuffer messageBuffer = new StringBuffer();
         for (int i = 0; i < tailleReponse; i++) {
             byte b = dis.readByte();
@@ -53,7 +54,7 @@ public class ACBPClient {
         String response = messageBuffer.toString();
         System.out.println("Réponse reçue.");
 
-        String[] parts = response.split("#");
+        String[] parts = response.split("#");//découpage du message
         for (int i = 1; i < parts.length; i += 4) {
             String[] client = new String[4];
             client[0] = parts[i];

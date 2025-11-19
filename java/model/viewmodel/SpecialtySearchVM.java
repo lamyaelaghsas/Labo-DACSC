@@ -2,22 +2,21 @@ package model.viewmodel;
 
 public class SpecialtySearchVM
 {
-    //---------------attributs---------------
+    //=================== ATTRIBUTS ===================
     private Integer id;
     private String name;
 
 
-    //---------------constructeur---------------
+    //=================== CONSTRUCTEURS ===================
     public SpecialtySearchVM() {}
 
 
-    //---------------accesseurs---------------
+    //=================== ACCESSEURS ===================
 
     //get
     public Integer getId() {
         return id;
     }
-
     public String getName() {
         return name;
     }
@@ -27,7 +26,6 @@ public class SpecialtySearchVM
     public void setId(Integer id) {
         this.id = id;
     }
-
     public void setName(String name) {
         this.name = name;
     }

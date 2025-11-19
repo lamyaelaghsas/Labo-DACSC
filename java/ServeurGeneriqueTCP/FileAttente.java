@@ -14,13 +14,13 @@ public class FileAttente
 
     public synchronized void addConnexion(Socket socket)
     {
-        fileAttente.addLast(socket);
-        notify();
+        fileAttente.addLast(socket); //ajout a la fin de la liste
+        notify(); //on reveille le thread pour lui dire quune connexion arrive avec addconnexion
     }
 
     public synchronized Socket getConnexion() throws InterruptedException
     {
-        while (fileAttente.isEmpty()) wait();
-        return fileAttente.remove();
+        while (fileAttente.isEmpty()) wait(); //tant que la file est vide, le thread attend
+        return fileAttente.remove();//Dès qu’un socket est disponible, on le retire de la file et on le renvoie
     }
 }

@@ -3,6 +3,7 @@ package view;
 import protocol.ProtocoleCAP.*;
 import ServeurGeneriqueTCP.*;
 import configuration.ReadConfiguration;
+import java.awt.*;
 import java.io.IOException;
 import java.util.*;
 import javax.swing.*;
@@ -13,6 +14,15 @@ public class ServeurCAP extends javax.swing.JFrame implements Logger
     ThreadServeur threadServeur;
     private int port;
     private int poolSize;
+
+    // Couleurs pastel
+    private Color rosePastel = new Color(255, 209, 220);
+    private Color jaunePastel = new Color(255, 253, 208);
+    private Color vertPastel = new Color(220, 240, 220);
+    private Color bleuPastel = new Color(224, 240, 255);
+    private Color backgroundColor = new Color(252, 252, 255);
+    private Color borderColor = new Color(230, 230, 235);
+    private Color textColor = new Color(80, 80, 90);
 
     public ServeurCAP()
     {
@@ -50,6 +60,7 @@ public class ServeurCAP extends javax.swing.JFrame implements Logger
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Serveur CAP");
+        getContentPane().setBackground(backgroundColor);
 
         jTableLogs.setModel(new javax.swing.table.DefaultTableModel(
                 new Object [][]
@@ -81,24 +92,69 @@ public class ServeurCAP extends javax.swing.JFrame implements Logger
                 return canEdit [columnIndex];
             }
         });
+        jTableLogs.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        jTableLogs.setRowHeight(30);
+        jTableLogs.setGridColor(borderColor);
+        jTableLogs.setSelectionBackground(vertPastel);
+        jTableLogs.setSelectionForeground(textColor);
+        jTableLogs.setShowVerticalLines(false);
+        jTableLogs.setShowHorizontalLines(true);
+        jTableLogs.setBackground(Color.WHITE);
+        jTableLogs.setForeground(textColor);
+
+        jTableLogs.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        jTableLogs.getTableHeader().setBackground(bleuPastel);
+        jTableLogs.getTableHeader().setForeground(textColor);
+        jTableLogs.getTableHeader().setPreferredSize(new Dimension(0, 35));
+
         jScrollPane1.setViewportView(jTableLogs);
+        jScrollPane1.setBorder(BorderFactory.createLineBorder(borderColor, 1));
 
         jLabel1.setText("Protocole :");
+        jLabel1.setForeground(textColor);
+        jLabel1.setFont(new Font("Segoe UI", Font.PLAIN, 13));
 
         jComboBoxProtocole.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "CAP" }));
+        jComboBoxProtocole.setFont(new Font("Segoe UI", Font.PLAIN, 13));
 
         jLabel2.setText("Port :");
+        jLabel2.setForeground(textColor);
+        jLabel2.setFont(new Font("Segoe UI", Font.PLAIN, 13));
 
         jTextFieldPort.setText("50002");
+        jTextFieldPort.setFont(new Font("Segoe UI", Font.PLAIN, 13));
 
         jCheckBoxPool.setSelected(true);
         jCheckBoxPool.setText("Pool");
+        jCheckBoxPool.setForeground(textColor);
+        jCheckBoxPool.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        jCheckBoxPool.setBackground(backgroundColor);
 
         jLabel3.setText("Taille Pool :");
+        jLabel3.setForeground(textColor);
+        jLabel3.setFont(new Font("Segoe UI", Font.PLAIN, 13));
 
         jTextFieldTaillePool.setText("5");
+        jTextFieldTaillePool.setFont(new Font("Segoe UI", Font.PLAIN, 13));
 
         jButtonStart.setText("Start");
+        jButtonStart.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        jButtonStart.setBackground(vertPastel);
+        jButtonStart.setForeground(textColor);
+        jButtonStart.setFocusPainted(false);
+        jButtonStart.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(borderColor, 1),
+                BorderFactory.createEmptyBorder(8, 20, 8, 20)
+        ));
+        jButtonStart.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        jButtonStart.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                jButtonStart.setBackground(new Color(200, 230, 200));
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                jButtonStart.setBackground(vertPastel);
+            }
+        });
         jButtonStart.addActionListener(new java.awt.event.ActionListener()
         {
             public void actionPerformed(java.awt.event.ActionEvent evt)
@@ -108,7 +164,26 @@ public class ServeurCAP extends javax.swing.JFrame implements Logger
         });
 
         jButtonStop.setText("Stop");
+        jButtonStop.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        jButtonStop.setBackground(new Color(255, 220, 220));
+        jButtonStop.setForeground(textColor);
         jButtonStop.setEnabled(false);
+        jButtonStop.setFocusPainted(false);
+        jButtonStop.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(borderColor, 1),
+                BorderFactory.createEmptyBorder(8, 20, 8, 20)
+        ));
+        jButtonStop.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        jButtonStop.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                if (jButtonStop.isEnabled()) {
+                    jButtonStop.setBackground(new Color(255, 200, 200));
+                }
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                jButtonStop.setBackground(new Color(255, 220, 220));
+            }
+        });
         jButtonStop.addActionListener(new java.awt.event.ActionListener()
         {
             public void actionPerformed(java.awt.event.ActionEvent evt)
@@ -118,6 +193,23 @@ public class ServeurCAP extends javax.swing.JFrame implements Logger
         });
 
         jButtonViderLogs.setText("Vider Logs");
+        jButtonViderLogs.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        jButtonViderLogs.setBackground(jaunePastel);
+        jButtonViderLogs.setForeground(textColor);
+        jButtonViderLogs.setFocusPainted(false);
+        jButtonViderLogs.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(borderColor, 1),
+                BorderFactory.createEmptyBorder(8, 20, 8, 20)
+        ));
+        jButtonViderLogs.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        jButtonViderLogs.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                jButtonViderLogs.setBackground(new Color(255, 250, 180));
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                jButtonViderLogs.setBackground(jaunePastel);
+            }
+        });
         jButtonViderLogs.addActionListener(new java.awt.event.ActionListener()
         {
             public void actionPerformed(java.awt.event.ActionEvent evt)
@@ -131,7 +223,7 @@ public class ServeurCAP extends javax.swing.JFrame implements Logger
         layout.setHorizontalGroup(
                 layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(layout.createSequentialGroup()
-                                .addContainerGap()
+                                .addGap(20, 20, 20)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                         .addComponent(jScrollPane1)
                                         .addGroup(layout.createSequentialGroup()
@@ -151,53 +243,57 @@ public class ServeurCAP extends javax.swing.JFrame implements Logger
                                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                                                 .addComponent(jTextFieldTaillePool, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
                                                         .addGroup(layout.createSequentialGroup()
-                                                                .addComponent(jButtonStart)
-                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jButtonStop)
-                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jButtonViderLogs)))
+                                                                .addComponent(jButtonStart, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addGap(10, 10, 10)
+                                                                .addComponent(jButtonStop, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addGap(10, 10, 10)
+                                                                .addComponent(jButtonViderLogs, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))
                                                 .addGap(0, 150, Short.MAX_VALUE)))
-                                .addContainerGap())
+                                .addGap(20, 20, 20))
         );
         layout.setVerticalGroup(
                 layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addContainerGap()
+                                .addGap(20, 20, 20)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                         .addComponent(jLabel1)
-                                        .addComponent(jComboBoxProtocole, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jComboBoxProtocole, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(jLabel2)
-                                        .addComponent(jTextFieldPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jTextFieldPort, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(jCheckBoxPool)
                                         .addComponent(jLabel3)
-                                        .addComponent(jTextFieldTaillePool, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                        .addComponent(jTextFieldTaillePool, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(20, 20, 20)
                                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 350, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addGap(15, 15, 15)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                         .addComponent(jButtonStart)
                                         .addComponent(jButtonStop)
                                         .addComponent(jButtonViderLogs))
-                                .addContainerGap())
+                                .addGap(20, 20, 20))
         );
 
         pack();
     }// </editor-fold>
 
+    //BOUTON START :
     private void jButtonStartActionPerformed(java.awt.event.ActionEvent evt)
     {
         try
         {
             Protocole protocole = null;
             if (((String)jComboBoxProtocole.getSelectedItem()).equals("CAP"))
+                // Création du protocole :
                 protocole = new CAP(this);
             int port = Integer.parseInt(jTextFieldPort.getText());
             if (jCheckBoxPool.isSelected())
             {
                 int taillePool = Integer.parseInt(jTextFieldTaillePool.getText());
+                // Création du serveur :
                 threadServeur = new ThreadServeurPool(port,protocole,taillePool,this);
             }
             videLogs();
+            //Lancement :
             threadServeur.start();
             jButtonStart.setEnabled(false);
             jButtonStop.setEnabled(true);
@@ -228,30 +324,11 @@ public class ServeurCAP extends javax.swing.JFrame implements Logger
     {
         try
         {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels())
-            {
-                if ("Nimbus".equals(info.getName()))
-                {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
+            javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getSystemLookAndFeelClassName());
         }
-        catch (ClassNotFoundException ex)
+        catch (Exception ex)
         {
-            java.util.logging.Logger.getLogger(ServeurCAP.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        catch (InstantiationException ex)
-        {
-            java.util.logging.Logger.getLogger(ServeurCAP.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        catch (IllegalAccessException ex)
-        {
-            java.util.logging.Logger.getLogger(ServeurCAP.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        catch (javax.swing.UnsupportedLookAndFeelException ex)
-        {
-            java.util.logging.Logger.getLogger(ServeurCAP.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            ex.printStackTrace();
         }
 
         /* Create and display the form */

@@ -44,49 +44,40 @@ public class User implements Entity, Serializable
     {
         return id;
     }
-
     public String getUsername()
     {
         return username;
     }
-
     public String getPassword()
     {
         return password;
     }
-
     public Integer getDoctorId()
     {
         return doctorId;
     }
-
     public String getRole()
     {
         return role;
     }
-
 
     //set
     public void setId(Integer id)
     {
         this.id = id;
     }
-
     public void setUsername(String username)
     {
         this.username = username;
     }
-
     public void setPassword(String password)
     {
         this.password = password;
     }
-
     public void setDoctorId(Integer doctorId)
     {
         this.doctorId = doctorId;
     }
-
     public void setRole(String role)
     {
         this.role = role;

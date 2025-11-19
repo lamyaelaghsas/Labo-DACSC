@@ -13,7 +13,7 @@ public class ReadConfiguration
     {
         try
         {
-            properties = new Properties();
+            properties = new Properties(); //properties contiendra ttes les clés/valeurs
             File file = new File(configFile);
             if (file.exists())
             {
@@ -31,11 +31,13 @@ public class ReadConfiguration
 
     public static String get(String key)
     {
+
         return properties.getProperty(key);
     }
 
     public static int getInt(String key)
     {
+
         return Integer.parseInt(get(key));
     }
 }

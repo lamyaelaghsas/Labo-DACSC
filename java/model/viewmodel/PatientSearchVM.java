@@ -4,33 +4,27 @@ import java.sql.Date;
 
 public class PatientSearchVM
 {
-    //---------------attributs---------------
+    //=================== ATTRIBUTS ===================
     private Integer id;
     private String lastName;
     private String firstName;
     private Date birthDate;
 
-    //---------------constructeur---------------
-    public PatientSearchVM() {}
+    //=================== CONSTRUCTEURS ===================
+    public PatientSearchVM() {} //juste pour remplir les champs qu'on veut filtrer
 
 
-    //---------------accesseurs---------------
+    //=================== ACCESSEURS ===================
 
     //get
     public Integer getId() { return id; }
-
     public String getLastName() { return lastName; }
-
     public String getFirstName() { return firstName; }
-
     public Date getBirthDate() { return birthDate; }
 
     //set
     public void setId(Integer id) { this.id = id; }
-
     public void setLastName(String lastName) { this.lastName = lastName; }
-
     public void setFirstName(String firstName) { this.firstName = firstName; }
-
     public void setBirthDate(Date birthDate) { this.birthDate = birthDate; }
 }

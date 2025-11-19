@@ -32,7 +32,7 @@ public class UserDAO
 
     public ArrayList<User> getList()
     {
-        return users;
+        return users; //Retourne la liste des utilisateurs déjà chargés depuis la base
     }
 
     public User getById(Integer id)

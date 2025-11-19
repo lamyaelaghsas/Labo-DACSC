@@ -10,13 +10,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class PatientDAO {
-    private static PatientDAO instance = null;
-    private final DatabaseConnection connectDB;
-    private final ArrayList<Patient> patients;
+    private static PatientDAO instance = null; //instance= singleton pr avoir qun objet patientDAO
+    private final DatabaseConnection connectDB; //contient la connexion a la bdd
+    private final ArrayList<Patient> patients; //liste memoire pr stocker les patients chargés
 
     private PatientDAO() {
         connectDB = DatabaseConnection.getInstance();
-        patients = new ArrayList<>();
+        patients = new ArrayList<>(); //on prepare une liste vide pr stocker les patients
     }
 
     public static synchronized PatientDAO getInstance() {
@@ -26,9 +26,9 @@ public class PatientDAO {
         return instance;
     }
 
-    public ArrayList<Patient> getList() {
-        return patients;
-    }
+    /*public ArrayList<Patient> getList() {
+        return patients; //Retourne la liste complète des patients
+    }*/
 
     public Patient getById(Integer id) {
         for (Patient p : patients) {
@@ -40,12 +40,12 @@ public class PatientDAO {
     }
 
     public synchronized ArrayList<Patient> load() {
-        return this.load(null);
+        return this.load(null); //récup tous les patients
     }
 
-    public synchronized ArrayList<Patient> load(PatientSearchVM psvm)
+    public synchronized ArrayList<Patient> load(PatientSearchVM psvm) //récup les patients selon les criteres donné
     {
-        ArrayList<Patient> result = new ArrayList<>();
+        ArrayList<Patient> result = new ArrayList<>(); //liste vide pr stocker les resultats trouvés
 
         try {
             String sql = "SELECT id, last_name, first_name, birth_date " +
@@ -94,7 +94,7 @@ public class PatientDAO {
                 }
             }
 
-            ResultSet rs = stmt.executeQuery();
+            ResultSet rs = stmt.executeQuery(); //on execute la requete
 
             while (rs.next()) {
                 Integer id = rs.getInt("id");
@@ -121,6 +121,7 @@ public class PatientDAO {
         try {
             String sql;
             if (p != null) {
+                // Cas 1 : patient existe déjà (update)
                 if (p.getId() != null) {
                     sql = "UPDATE patients SET " +
                             "last_name = ?, " +
@@ -136,6 +137,7 @@ public class PatientDAO {
                     pStmt.executeUpdate();
                     pStmt.close();
                 } else {
+                    //Cas 2 : nouveau patient (insert)
                     sql = "INSERT INTO patients (" +
                             "last_name, " +
                             "first_name, " +
@@ -148,7 +150,7 @@ public class PatientDAO {
                     pStmt.setDate(3, p.getBirthDate() != null ? Date.valueOf(p.getBirthDate().toLocalDate()) : null);
                     pStmt.executeUpdate();
 
-                    ResultSet rs = pStmt.getGeneratedKeys();
+                    ResultSet rs = pStmt.getGeneratedKeys(); //recup la table qui contient le nv id
                     rs.next();
                     p.setId(rs.getInt(1));
 

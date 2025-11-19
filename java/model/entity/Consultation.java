@@ -8,7 +8,7 @@ public class Consultation implements Entity, Serializable
 {
     private static final long serialVersionUID = 1L;
 
-    //---------------attributs---------------
+    //=================== ATTRIBUTS ===================
     private Integer id;
     private Integer doctorId;
     private Integer patientId;
@@ -20,9 +20,9 @@ public class Consultation implements Entity, Serializable
     private String doctorLastName;
     private String doctorFirstName;
 
-    //---------------constructeur---------------
+    //=================== CONSTRUCTEURS ===================
 
-    // Constructeur defaut
+    // Constructeur par defaut (vide)
     public Consultation() {
         this.id = null;
         this.doctorId = null;
@@ -32,7 +32,7 @@ public class Consultation implements Entity, Serializable
         this.reason = "";
     }
 
-    // Constructeur init
+    // Constructeur d'initialisation
     public Consultation(Integer id, Integer doctorId, Integer patientId, Date date, Time time, String reason) {
         this.id = id;
         this.doctorId = doctorId;
@@ -43,77 +43,58 @@ public class Consultation implements Entity, Serializable
     }
 
 
-    //---------------accesseurs---------------
+    //=================== ACCESSEURS ===================
 
     //get
     public Integer getId() {
         return id;
     }
-
     public Integer getDoctorId() {
         return doctorId;
     }
-
     public Integer getPatientId() {
         return patientId;
     }
-
     public Date getDate() {
         return date;
     }
-
     public Time getTime() {
         return time;
     }
-
     public String getReason() {
         return reason;
     }
-
     public String getPatientLastName() { return patientLastName; }
-
     public String getPatientFirstName() { return patientFirstName; }
-
     public String getDoctorLastName() { return doctorLastName; }
-
     public String getDoctorFirstName() { return doctorFirstName; }
-
 
     //set
     public void setId(Integer id) {
         this.id = id;
     }
-
     public void setDoctorId(Integer doctorId) {
         this.doctorId = doctorId;
     }
-
     public void setPatientId(Integer patientId) {
         this.patientId = patientId;
     }
-
     public void setDate(Date date) {
         this.date = date;
     }
-
     public void setTime(Time time) {
         this.time = time;
     }
-
     public void setReason(String reason) {
         this.reason = reason;
     }
-
     public void setPatientLastName(String n) { patientLastName = n; }
-
     public void setPatientFirstName(String n) { patientFirstName = n; }
-
     public void setDoctorLastName(String n) { doctorLastName = n; }
-
     public void setDoctorFirstName(String n) { doctorFirstName = n; }
 
 
-    //---------------methode---------------
+    //=================== METHODES ===================
 
     @Override
     public String toString() {
