@@ -329,6 +329,8 @@ void MainWindowClientConsultationBooker::on_pushButtonReserver_clicked()
     }
 }
 
+//test modif github
+
 
 // ============================= Constructions des trames  =============================
 
